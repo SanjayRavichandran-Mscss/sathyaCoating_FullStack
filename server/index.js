@@ -4,6 +4,7 @@ const cors = require("cors");
 const db = require("./config/db");
 const projectRoutes = require("./routes/projectRoutes");
 const reckonerRoutes = require("./routes/reckonerRoutes");
+const sheetRoutes = require("./routes/sheetRoutes");
 
 const app = express();
 
@@ -28,6 +29,7 @@ const startServer = async () => {
         
         app.use("/project", projectRoutes);
         app.use("/reckoner",reckonerRoutes);
+        app.use("/sheet",sheetRoutes);
         
         app.listen(process.env.PORT || 5000, () => 
             console.log(`Server running on port ${process.env.PORT || 5000}`)

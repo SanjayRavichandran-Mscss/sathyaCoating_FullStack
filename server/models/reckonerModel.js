@@ -490,3 +490,32 @@ exports.updateCompletionStatus = async (rec_id, updateData) => {
     connection.release();
   }
 };
+
+exports.checkPoReckonerExists = async (site_id) => {
+  try {
+      // First check if site exists in site_details
+      const siteQuery = `SELECT site_id, site_name FROM site_details WHERE site_id = ?`;
+      const [siteResult] = await db.query(siteQuery, [site_id]);
+      
+      if (siteResult.length === 0) {
+          throw new Error('Site not found');
+      }
+
+      const siteData = {
+          site_id: siteResult[0].site_id,
+          site_name: siteResult[0].site_name
+      };
+
+      // Check if po_reckoner exists for this site
+      const poReckonerQuery = `SELECT site_id FROM po_reckoner WHERE site_id = ?`;
+      const [poReckonerResult] = await db.query(poReckonerQuery, [site_id]);
+      
+      return {
+          exists: poReckonerResult.length > 0,
+          ...siteData
+      };
+  } catch (error) {
+      console.error('Database error:', error);
+      throw error;
+  }
+};

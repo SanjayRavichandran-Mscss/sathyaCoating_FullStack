@@ -383,3 +383,59 @@ exports.updateCompletionStatus = async (req, res) => {
     errorResponse(res, "Error updating completion status", 500, error);
   }
 };
+
+
+
+
+
+
+
+
+
+exports.checkPoReckoner = async (req, res) => {
+  try {
+      const site_id = req.params.site_id;
+      
+      if (!site_id) {
+          return res.status(400).json({
+              status: 'error',
+              message: 'site_id parameter is required'
+          });
+      }
+
+      const result = await reckonerModel.checkPoReckonerExists(site_id);
+      
+      if (result.exists) {
+          res.status(200).json({
+              status: 'success',
+              message: 'po_reckoner created',
+              data: {
+                  site_id: result.site_id,
+                  site_name: result.site_name
+              }
+          });
+      } else {
+          res.status(200).json({
+              status: 'success',
+              message: 'po_reckoner not created',
+              data: {
+                  site_id: result.site_id,
+                  site_name: result.site_name
+              }
+          });
+      }
+  } catch (error) {
+      if (error.message === 'Site not found') {
+          res.status(404).json({
+              status: 'error',
+              message: 'Site not found'
+          });
+      } else {
+          console.error('Error checking PO Reckoner:', error);
+          res.status(500).json({
+              status: 'error',
+              message: 'Internal server error'
+          });
+      }
+  }
+};

@@ -43,4 +43,9 @@ router.patch(
   reckonerController.updateCompletionStatus
 );
 
+
+// check if po-reckoner exists 
+router.get('/check-po-reckoner/:site_id', reckonerController.checkPoReckoner);
+
+
 module.exports = router;
