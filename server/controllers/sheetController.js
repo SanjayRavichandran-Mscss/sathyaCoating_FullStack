@@ -18,6 +18,11 @@ const {
   addDynamicColumn,
   checkSiteInPoReckoner,
   checkSiteInReportMaster,
+  getSiteCategoriesAndSubcategories,
+  getReportIdsForSite,
+  getDynamicTableData,
+  getDynamicTableDataByReportType,
+  updateWorksheetData
 } = require("../models/sheetModel");
 
 exports.createConsumable = async (req, res) => {
@@ -646,6 +651,309 @@ exports.getSiteReports = async (req, res) => {
       success: false,
       message: "Failed to fetch site reports",
       error: error.message,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// the below modules is for fetching worksheet data [rows columns]
+
+exports.getWorksheetData = async (req, res) => {
+  try {
+    const { site_id } = req.params;
+
+    // 1. Get all categories and subcategories for the site
+    const categories = await getSiteCategoriesAndSubcategories(site_id);
+    
+    if (!categories || categories.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No categories found for this site",
+      });
+    }
+
+    // 2. Get all report_ids for the site
+    const reportIds = await getReportIdsForSite(site_id);
+    
+    if (!reportIds || reportIds.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No reports found for this site",
+      });
+    }
+
+    // 3. Group categories and subcategories
+    const groupedCategories = {};
+    categories.forEach(item => {
+      if (!groupedCategories[item.category_id]) {
+        groupedCategories[item.category_id] = {
+          category_id: item.category_id,
+          category_name: item.category_name,
+          sanitized_name: sanitizeName(item.category_name),
+          subcategories: []
+        };
+      }
+      
+      // Check if subcategory already exists to avoid duplicates
+      const subcatExists = groupedCategories[item.category_id].subcategories.some(
+        sub => sub.subcategory_id === item.subcategory_id
+      );
+      
+      if (!subcatExists) {
+        groupedCategories[item.category_id].subcategories.push({
+          subcategory_id: item.subcategory_id,
+          subcategory_name: item.subcategory_name,
+          sanitized_name: sanitizeName(item.subcategory_name)
+        });
+      }
+    });
+
+    // 4. Get data for each dynamic table
+    const result = {
+      site_id: site_id,
+      report_ids: reportIds,
+      categories: []
+    };
+
+    for (const categoryId in groupedCategories) {
+      const category = groupedCategories[categoryId];
+      try {
+        const tableData = await getDynamicTableData(category.category_name, reportIds);
+        
+        result.categories.push({
+          category_id: category.category_id,
+          category_name: category.category_name,
+          table_name: category.sanitized_name,
+          subcategories: category.subcategories,
+          table_data: tableData
+        });
+      } catch (error) {
+        console.error(`Error processing category ${category.category_name}:`, error);
+        result.categories.push({
+          category_id: category.category_id,
+          category_name: category.category_name,
+          table_name: category.sanitized_name,
+          error: `Failed to fetch table data: ${error.message}`,
+          subcategories: category.subcategories
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error("Error fetching worksheet data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch worksheet data",
+      error: error.message,
+    });
+  }
+};
+
+// filter by report_type_id
+exports.getWorksheetDataByReportType = async (req, res) => {
+  try {
+    const { site_id, report_type_id } = req.params;
+
+    // 1. Get all categories and subcategories for the site
+    const categories = await getSiteCategoriesAndSubcategories(site_id);
+    
+    if (!categories || categories.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No categories found for this site",
+      });
+    }
+
+    // 2. Group categories and subcategories
+    const groupedCategories = {};
+    categories.forEach(item => {
+      if (!groupedCategories[item.category_id]) {
+        groupedCategories[item.category_id] = {
+          category_id: item.category_id,
+          category_name: item.category_name,
+          sanitized_name: sanitizeName(item.category_name),
+          subcategories: []
+        };
+      }
+      
+      // Check if subcategory already exists to avoid duplicates
+      const subcatExists = groupedCategories[item.category_id].subcategories.some(
+        sub => sub.subcategory_id === item.subcategory_id
+      );
+      
+      if (!subcatExists) {
+        groupedCategories[item.category_id].subcategories.push({
+          subcategory_id: item.subcategory_id,
+          subcategory_name: item.subcategory_name,
+          sanitized_name: sanitizeName(item.subcategory_name)
+        });
+      }
+    });
+
+    // 3. Get data for each dynamic table
+    const result = {
+      site_id: site_id,
+      report_type_id: parseInt(report_type_id),
+      categories: []
+    };
+
+    for (const categoryId in groupedCategories) {
+      const category = groupedCategories[categoryId];
+      try {
+        const tableData = await getDynamicTableDataByReportType(
+          category.category_name, 
+          site_id, 
+          report_type_id
+        );
+        
+        result.categories.push({
+          category_id: category.category_id,
+          category_name: category.category_name,
+          table_name: category.sanitized_name,
+          subcategories: category.subcategories,
+          table_data: tableData
+        });
+      } catch (error) {
+        console.error(`Error processing category ${category.category_name}:`, error);
+        result.categories.push({
+          category_id: category.category_id,
+          category_name: category.category_name,
+          table_name: category.sanitized_name,
+          error: `Failed to fetch table data: ${error.message}`,
+          subcategories: category.subcategories
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error("Error fetching worksheet data by report type:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch worksheet data",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+// Helper function (add this at the top with other imports)
+function sanitizeName(name) {
+  return name.replace(/\s+/g, "_").toLowerCase();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// update datas from worksheet to db table
+
+exports.updateWorksheetData = async (req, res) => {
+  try {
+    const { site_id, updates } = req.body;
+
+    // Validate request structure
+    if (!site_id || !Array.isArray(updates)) {
+      return res.status(400).json({
+        success: false,
+        message: "Required: site_id and updates array"
+      });
+    }
+
+    // Validate each update
+    const requiredFields = ['report_id', 'report_type_id', 'category_name', 'values'];
+    for (const update of updates) {
+      if (!requiredFields.every(field => field in update)) {
+        return res.status(400).json({
+          success: false,
+          message: `Each update requires: ${requiredFields.join(', ')}`
+        });
+      }
+
+      if (typeof update.values !== 'object' || Object.keys(update.values).length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Each update must contain values object with at least one column"
+        });
+      }
+    }
+
+    // Process updates
+    const results = await updateWorksheetData(site_id, updates);
+
+    res.status(200).json({
+      success: true,
+      message: "Worksheet data updated successfully",
+      data: {
+        site_id,
+        total_updates: results.length,
+        details: results
+      }
+    });
+
+  } catch (error) {
+    console.error("Worksheet update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update worksheet",
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

@@ -23,4 +23,14 @@ router.get('/process/:po_number', sheetController.processSiteReportsByPO);
 router.get('/fetch/:site_id', sheetController.getSiteReports);
 
 
+
+
+// Get worksheet data for a site
+router.get('/worksheet/:site_id', sheetController.getWorksheetData);
+// Get worksheet data for a site filtered by report type
+router.get('/worksheet/:site_id/:report_type_id', sheetController.getWorksheetDataByReportType);
+
+// update data from worksheet to db table
+router.patch('/worksheet/update', sheetController.updateWorksheetData);
+
 module.exports = router;

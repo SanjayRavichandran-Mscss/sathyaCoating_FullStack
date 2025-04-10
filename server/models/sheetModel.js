@@ -425,3 +425,309 @@ exports.checkSiteInReportMaster = async (siteId) => {
     throw error;
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// For getting worksheet datas by site_id
+
+exports.getSiteCategoriesAndSubcategories = async (siteId) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT DISTINCT 
+        pr.category_id, 
+        ic.category_name,
+        pr.subcategory_id,
+        isc.subcategory_name
+       FROM po_reckoner pr
+       JOIN item_category ic ON pr.category_id = ic.category_id
+       JOIN item_subcategory isc ON pr.subcategory_id = isc.subcategory_id
+       WHERE pr.site_id = ?
+       ORDER BY pr.category_id, pr.subcategory_id`,
+      [siteId]
+    );
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.getReportIdsForSite = async (siteId) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT report_id, DATE(date) AS date 
+       FROM report_master 
+       WHERE site_id = ? 
+       ORDER BY date`,
+      [siteId]
+    );
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.getDynamicTableData = async (tableName, reportIds) => {
+  const sanitizedTableName = sanitizeName(tableName);
+  
+  try {
+    // First get all columns in the table
+    const [columns] = await db.query(
+      `SELECT COLUMN_NAME as column_name 
+       FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() 
+       AND TABLE_NAME = ? 
+       AND COLUMN_NAME NOT IN ('id', 'report_id', 'report_type_id')
+       ORDER BY ORDINAL_POSITION`,
+      [sanitizedTableName]
+    );
+
+    if (columns.length === 0) {
+      return { table: sanitizedTableName, columns: [], data: [] };
+    }
+
+    // Get data for all report_ids
+    const reportIdList = reportIds.map(r => r.report_id);
+    const placeholders = reportIdList.map(() => '?').join(',');
+    
+    // Select only the columns we found (excluding id, report_id, report_type_id)
+    const columnList = columns.map(c => `\`${c.column_name}\``).join(', ');
+    
+    const [data] = await db.query(
+      `SELECT report_id, ${columnList} 
+       FROM \`${sanitizedTableName}\` 
+       WHERE report_id IN (${placeholders}) 
+       ORDER BY report_id`,
+      [...reportIdList]
+    );
+
+    return {
+      table: sanitizedTableName,
+      columns: columns.map(c => c.column_name),
+      data: data
+    };
+  } catch (error) {
+    console.error(`Error fetching data from table ${sanitizedTableName}:`, error);
+    throw error;
+  }
+};
+
+
+
+// Add these new functions to your existing sheetModel.js
+
+exports.getDynamicTableDataByReportType = async (tableName, siteId, reportTypeId) => {
+  const sanitizedTableName = sanitizeName(tableName);
+  
+  try {
+    // First get all columns in the table
+    const [columns] = await db.query(
+      `SELECT COLUMN_NAME as column_name 
+       FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() 
+       AND TABLE_NAME = ? 
+       AND COLUMN_NAME NOT IN ('id', 'report_id', 'report_type_id')
+       ORDER BY ORDINAL_POSITION`,
+      [sanitizedTableName]
+    );
+
+    if (columns.length === 0) {
+      return { table: sanitizedTableName, columns: [], data: [] };
+    }
+
+    // Get report_ids for this site and report_type
+    const [reportIds] = await db.query(
+      `SELECT r.report_id, DATE(r.date) AS date 
+       FROM report_master r
+       JOIN \`${sanitizedTableName}\` dt ON r.report_id = dt.report_id
+       WHERE r.site_id = ? AND dt.report_type_id = ?
+       ORDER BY r.date`,
+      [siteId, reportTypeId]
+    );
+
+    if (reportIds.length === 0) {
+      return { table: sanitizedTableName, columns: columns.map(c => c.column_name), data: [] };
+    }
+
+    // Select only the columns we found (excluding id, report_id, report_type_id)
+    const columnList = columns.map(c => `\`${c.column_name}\``).join(', ');
+    const reportIdList = reportIds.map(r => r.report_id);
+    
+    const [data] = await db.query(
+      `SELECT report_id, ${columnList} 
+       FROM \`${sanitizedTableName}\` 
+       WHERE report_id IN (?) AND report_type_id = ?
+       ORDER BY report_id`,
+      [reportIdList, reportTypeId]
+    );
+
+    return {
+      table: sanitizedTableName,
+      columns: columns.map(c => c.column_name),
+      data: data,
+      report_ids: reportIds
+    };
+  } catch (error) {
+    console.error(`Error fetching data from table ${sanitizedTableName}:`, error);
+    throw error;
+  }
+};
+
+
+
+
+
+
+// update data from worksheet to db table
+
+
+
+
+// Enhanced update function for all update types
+exports.updateWorksheetData = async (siteId, updates) => {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    const results = [];
+    const validatedUpdates = [];
+
+    // Validate all updates first
+    for (const update of updates) {
+      // Validate report belongs to site
+      const [reportCheck] = await connection.query(
+        `SELECT 1 FROM report_master 
+         WHERE report_id = ? AND site_id = ? LIMIT 1`,
+        [update.report_id, siteId]
+      );
+      if (!reportCheck.length) {
+        throw new Error(`Report ${update.report_id} not found for site ${siteId}`);
+      }
+
+      // Validate columns exist in table
+      const tableName = sanitizeName(update.category_name);
+      const [columnCheck] = await connection.query(
+        `SELECT COLUMN_NAME 
+         FROM INFORMATION_SCHEMA.COLUMNS 
+         WHERE TABLE_SCHEMA = DATABASE() 
+         AND TABLE_NAME = ? 
+         AND COLUMN_NAME IN (?)`,
+        [tableName, Object.keys(update.values)]
+      );
+
+      const validColumns = columnCheck.map(c => c.COLUMN_NAME);
+      const invalidColumns = Object.keys(update.values).filter(
+        col => !validColumns.includes(col)
+      );
+
+      if (invalidColumns.length > 0) {
+        throw new Error(`Invalid columns [${invalidColumns.join(', ')}] in table ${tableName}`);
+      }
+
+      validatedUpdates.push({
+        tableName,
+        report_id: update.report_id,
+        report_type_id: update.report_type_id,
+        values: update.values
+      });
+    }
+
+    // Process updates
+    for (const update of validatedUpdates) {
+      const setClause = Object.keys(update.values)
+        .map(col => `\`${col}\` = ?`)
+        .join(', ');
+
+      const [result] = await connection.query(
+        `UPDATE \`${update.tableName}\` 
+         SET ${setClause} 
+         WHERE report_id = ? AND report_type_id = ?`,
+        [...Object.values(update.values), update.report_id, update.report_type_id]
+      );
+
+      results.push({
+        table: update.tableName,
+        report_id: update.report_id,
+        report_type_id: update.report_type_id,
+        updated_columns: Object.keys(update.values),
+        affected_rows: result.affectedRows
+      });
+    }
+
+    await connection.commit();
+    return results;
+  } catch (error) {
+    if (connection) await connection.rollback();
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+};
