@@ -580,30 +580,142 @@ exports.getDynamicTableData = async (tableName, reportIds) => {
 };
 
 
+// exports.getDynamicTableDataByReportType = async (tableName, siteId, reportTypeId, categoryId, subcategoryId) => {
+//   const sanitizedTableName = sanitizeName(tableName);
+  
+//   try {
+//     // First get the subcategory name from item_subcategory table
+//     const [subcategory] = subcategoryId ? await db.query(
+//       `SELECT subcategory_name 
+//        FROM item_subcategory 
+//        WHERE subcategory_id = ?`,
+//       [subcategoryId]
+//     ) : [{ subcategory_name: tableName }]; // Fallback to table name if no subcategory ID
 
-// Add these new functions to your existing sheetModel.js
+//     const subcategoryName = subcategory[0]?.subcategory_name || tableName;
+//     const sanitizedSubcategoryName = sanitizeName(subcategoryName);
 
-exports.getDynamicTableDataByReportType = async (tableName, siteId, reportTypeId) => {
+//     // Check if the columns exist in the table
+//     const columnPatterns = [
+//       sanitizedSubcategoryName,
+//       `${sanitizedSubcategoryName}_rate`,
+//       `${sanitizedSubcategoryName}_value`
+//     ];
+
+//     const [columns] = await db.query(
+//       `SELECT COLUMN_NAME as column_name 
+//        FROM INFORMATION_SCHEMA.COLUMNS 
+//        WHERE TABLE_SCHEMA = DATABASE() 
+//        AND TABLE_NAME = ? 
+//        AND COLUMN_NAME IN (?)
+//        ORDER BY FIELD(COLUMN_NAME, ?)`,
+//       [sanitizedTableName, columnPatterns, columnPatterns]
+//     );
+
+//     // Get report_ids for this site and report_type
+//     const [reportIds] = await db.query(
+//       `SELECT r.report_id, DATE(r.date) AS date 
+//        FROM report_master r
+//        JOIN \`${sanitizedTableName}\` dt ON r.report_id = dt.report_id
+//        WHERE r.site_id = ? AND dt.report_type_id = ?
+//        ORDER BY r.date`,
+//       [siteId, reportTypeId]
+//     );
+
+//     if (reportIds.length === 0) {
+//       return { 
+//         table: sanitizedTableName,
+//         category_id: categoryId,
+//         subcategory_id: subcategoryId,
+//         subcategory_name: subcategoryName,
+//         columns: columns.map(c => c.column_name), 
+//         data: [] 
+//       };
+//     }
+
+//     // Select only the specific columns we found
+//     const columnList = columns.length > 0 
+//       ? columns.map(c => `\`${c.column_name}\``).join(', ') 
+//       : 'NULL as no_columns_found';
+    
+//     const reportIdList = reportIds.map(r => r.report_id);
+    
+//     const [data] = await db.query(
+//       `SELECT report_id, ${columnList} 
+//        FROM \`${sanitizedTableName}\` 
+//        WHERE report_id IN (?) AND report_type_id = ?
+//        ORDER BY report_id`,
+//       [reportIdList, reportTypeId]
+//     );
+
+//     return {
+//       table: sanitizedTableName,
+//       category_id: categoryId,
+//       subcategory_id: subcategoryId,
+//       subcategory_name: subcategoryName,
+//       columns: columns.map(c => c.column_name),
+//       data: data,
+//       report_ids: reportIds
+//     };
+//   } catch (error) {
+//     console.error(`Error fetching data from table ${sanitizedTableName}:`, error);
+//     throw error;
+//   }
+// };
+
+
+
+// update data from worksheet to db table
+// Enhanced update function for all update types
+
+
+
+
+
+exports.getDynamicTableDataByReportType = async (tableName, siteId, reportTypeId, categoryId, subcategoryId) => {
   const sanitizedTableName = sanitizeName(tableName);
   
   try {
-    // First get all columns in the table
+    // First get the report type name
+    const [reportType] = await db.query(
+      `SELECT type_name 
+       FROM report_type 
+       WHERE type_id = ?`,
+      [reportTypeId]
+    );
+    
+    const typeName = reportType[0]?.type_name || 'reports'; // Fallback to 'reports' if not found
+
+    // Get the subcategory name from item_subcategory table
+    const [subcategory] = subcategoryId ? await db.query(
+      `SELECT subcategory_name 
+       FROM item_subcategory 
+       WHERE subcategory_id = ?`,
+      [subcategoryId]
+    ) : [{ subcategory_name: tableName }]; // Fallback to table name if no subcategory ID
+
+    const subcategoryName = subcategory[0]?.subcategory_name || tableName;
+    const sanitizedSubcategoryName = sanitizeName(subcategoryName);
+
+    // Check if the columns exist in the table
+    const columnPatterns = [
+      sanitizedSubcategoryName,
+      `${sanitizedSubcategoryName}_rate`,
+      `${sanitizedSubcategoryName}_value`
+    ];
+
     const [columns] = await db.query(
       `SELECT COLUMN_NAME as column_name 
        FROM INFORMATION_SCHEMA.COLUMNS 
        WHERE TABLE_SCHEMA = DATABASE() 
        AND TABLE_NAME = ? 
-       AND COLUMN_NAME NOT IN ('id', 'report_id', 'report_type_id')
-       ORDER BY ORDINAL_POSITION`,
-      [sanitizedTableName]
+       AND COLUMN_NAME IN (?)
+       ORDER BY FIELD(COLUMN_NAME, ?)`,
+      [sanitizedTableName, columnPatterns, columnPatterns]
     );
 
-    if (columns.length === 0) {
-      return { table: sanitizedTableName, columns: [], data: [] };
-    }
-
     // Get report_ids for this site and report_type
-    const [reportIds] = await db.query(
+    const [reportData] = await db.query(
       `SELECT r.report_id, DATE(r.date) AS date 
        FROM report_master r
        JOIN \`${sanitizedTableName}\` dt ON r.report_id = dt.report_id
@@ -612,13 +724,24 @@ exports.getDynamicTableDataByReportType = async (tableName, siteId, reportTypeId
       [siteId, reportTypeId]
     );
 
-    if (reportIds.length === 0) {
-      return { table: sanitizedTableName, columns: columns.map(c => c.column_name), data: [] };
+    if (reportData.length === 0) {
+      return { 
+        table: sanitizedTableName,
+        category_id: categoryId,
+        subcategory_id: subcategoryId,
+        subcategory_name: subcategoryName,
+        columns: columns.map(c => c.column_name), 
+        data: [],
+        [typeName]: [] // Use type_name as key with empty array
+      };
     }
 
-    // Select only the columns we found (excluding id, report_id, report_type_id)
-    const columnList = columns.map(c => `\`${c.column_name}\``).join(', ');
-    const reportIdList = reportIds.map(r => r.report_id);
+    // Select only the specific columns we found
+    const columnList = columns.length > 0 
+      ? columns.map(c => `\`${c.column_name}\``).join(', ') 
+      : 'NULL as no_columns_found';
+    
+    const reportIdList = reportData.map(r => r.report_id);
     
     const [data] = await db.query(
       `SELECT report_id, ${columnList} 
@@ -630,9 +753,12 @@ exports.getDynamicTableDataByReportType = async (tableName, siteId, reportTypeId
 
     return {
       table: sanitizedTableName,
+      category_id: categoryId,
+      subcategory_id: subcategoryId,
+      subcategory_name: subcategoryName,
       columns: columns.map(c => c.column_name),
       data: data,
-      report_ids: reportIds
+      [typeName]: reportData // Use type_name as key for the report data
     };
   } catch (error) {
     console.error(`Error fetching data from table ${sanitizedTableName}:`, error);
@@ -643,14 +769,6 @@ exports.getDynamicTableDataByReportType = async (tableName, siteId, reportTypeId
 
 
 
-
-
-// update data from worksheet to db table
-
-
-
-
-// Enhanced update function for all update types
 exports.updateWorksheetData = async (siteId, updates) => {
   let connection;
   try {
