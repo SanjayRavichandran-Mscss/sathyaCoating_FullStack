@@ -14,8 +14,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Button,
+  Snackbar
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Save as SaveIcon } from '@mui/icons-material';
 
 const ResizableGrid = () => {
   const { site_id, report_type_id } = useParams();
@@ -25,8 +27,12 @@ const ResizableGrid = () => {
   const [editingCell, setEditingCell] = useState({ rowIndex: null, colId: null });
   const [editValue, setEditValue] = useState('');
   const [columnWidths, setColumnWidths] = useState({});
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const tableRef = useRef(null);
   const resizingRef = useRef({ isResizing: false, columnId: null, startX: 0, startWidth: 0 });
+
+  // Track modified data
+  const [modifiedData, setModifiedData] = useState({});
 
   // Fixed height values for consistent sizing
   const TABLE_HEIGHT = 500;
@@ -78,12 +84,12 @@ const ResizableGrid = () => {
     setEditValue(value != null ? value.toString() : '');
   };
 
-  const handleSave = (categoryIndex, subcategoryIndex, tableDataIndex) => {
+  const handleSaveCell = (categoryIndex, subcategoryIndex, tableDataIndex) => {
     if (editingCell.rowIndex === null || !editingCell.colId) return;
 
-    const newValue = editValue === '' ? '' : parseFloat(editValue);
+    const newValue = editValue === '' ? null : parseFloat(editValue);
     if (isNaN(newValue) && editValue !== '') {
-      alert('Please enter a valid number');
+      setSnackbar({ open: true, message: 'Please enter a valid number', severity: 'error' });
       return;
     }
 
@@ -103,16 +109,122 @@ const ResizableGrid = () => {
       }
 
       const updatedRows = [...tableData.data];
+      const rowId = updatedRows[editingCell.rowIndex].report_id;
+      const columnName = editingCell.colId;
+      const columns = tableData.columns;
+
+      // Update the modified data state
+      setModifiedData(prev => {
+        const categoryName = newData.data.categories[categoryIndex].category_name;
+        const existingUpdates = prev[categoryName] || {};
+        const existingRowUpdates = existingUpdates[rowId] || {};
+
+        // Calculate the third column value if editing the first or second column
+        let calculatedThirdValue = null;
+        if (columns.length >= 3 && (columnName === columns[0] || columnName === columns[1])) {
+          const firstColValue = columnName === columns[0] ? newValue : parseFloat(updatedRows[editingCell.rowIndex][columns[0]]) || 0;
+          const secondColValue = columnName === columns[1] ? newValue : parseFloat(updatedRows[editingCell.rowIndex][columns[1]]) || 0;
+          calculatedThirdValue = (firstColValue * secondColValue).toFixed(2);
+        }
+
+        // Update modifiedData with the edited value and calculated third column value (if applicable)
+        const updatedRowUpdates = {
+          ...existingRowUpdates,
+          [columnName]: newValue
+        };
+        if (calculatedThirdValue !== null) {
+          updatedRowUpdates[columns[2]] = parseFloat(calculatedThirdValue);
+        }
+
+        return {
+          ...prev,
+          [categoryName]: {
+            ...existingUpdates,
+            [rowId]: updatedRowUpdates
+          }
+        };
+      });
+
+      // Update the row with the edited value
       updatedRows[editingCell.rowIndex] = {
         ...updatedRows[editingCell.rowIndex],
         [editingCell.colId]: newValue,
       };
+
+      // Update the third column if editing the first or second column
+      if (columns.length >= 3 && (columnName === columns[0] || columnName === columns[1])) {
+        const firstColValue = columnName === columns[0] ? newValue : parseFloat(updatedRows[editingCell.rowIndex][columns[0]]) || 0;
+        const secondColValue = columnName === columns[1] ? newValue : parseFloat(updatedRows[editingCell.rowIndex][columns[1]]) || 0;
+        updatedRows[editingCell.rowIndex][columns[2]] = (firstColValue * secondColValue).toFixed(2);
+      }
+
       tableData.data = updatedRows;
       return newData;
     });
 
     setEditingCell({ rowIndex: null, colId: null });
     setEditValue('');
+  };
+
+  const handleSaveAll = async () => {
+    if (Object.keys(modifiedData).length === 0) {
+      setSnackbar({ open: true, message: 'No changes to save', severity: 'info' });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Prepare the updates array for the API
+      const updates = [];
+
+      for (const [categoryName, rowUpdates] of Object.entries(modifiedData)) {
+        for (const [reportId, columnUpdates] of Object.entries(rowUpdates)) {
+          // Convert values to strings as per your API example
+          const stringValues = {};
+          for (const [colName, value] of Object.entries(columnUpdates)) {
+            stringValues[colName] = value !== null ? value.toString() : null;
+          }
+
+          updates.push({
+            report_id: parseInt(reportId),
+            report_type_id: parseInt(report_type_id),
+            category_name: categoryName,
+            values: stringValues
+          });
+        }
+      }
+
+      const response = await fetch('http://localhost:5000/sheet/worksheet/update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          site_id,
+          updates
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Save result:', result);
+
+      if (result.success) {
+        setSnackbar({ open: true, message: 'Data saved successfully', severity: 'success' });
+        setModifiedData({}); // Clear modified data after successful save
+      } else {
+        throw new Error(result.message || 'Failed to save data');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error);
+      setSnackbar({ open: true, message: error.message || 'Failed to save data', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleMouseDown = (e, columnId, currentWidth) => {
@@ -170,7 +282,7 @@ const ResizableGrid = () => {
   ) => {
     // Calculate the number of rows to determine if we need to add empty rows for consistent height
     const rowCount = data.length;
-    const emptyRowsNeeded = Math.max(0, 10 - rowCount); // Adjust 10 to your desired minimum rows
+    const emptyRowsNeeded = Math.max(0, 10 - rowCount);
 
     return (
       <Paper
@@ -288,11 +400,11 @@ const ResizableGrid = () => {
                                 }
                               }}
                               onBlur={() =>
-                                handleSave(categoryIndex, subcategoryIndex, tableDataIndex)
+                                handleSaveCell(categoryIndex, subcategoryIndex, tableDataIndex)
                               }
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter')
-                                  handleSave(categoryIndex, subcategoryIndex, tableDataIndex);
+                                  handleSaveCell(categoryIndex, subcategoryIndex, tableDataIndex);
                                 if (e.key === 'Escape')
                                   setEditingCell({ rowIndex: null, colId: null });
                               }}
@@ -301,7 +413,7 @@ const ResizableGrid = () => {
                               InputProps={{ 
                                 style: { 
                                   fontSize: '0.75rem',
-                                  height: ROW_HEIGHT - 8, // Adjust for padding
+                                  height: ROW_HEIGHT - 8,
                                 } 
                               }}
                             />
@@ -311,7 +423,7 @@ const ResizableGrid = () => {
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                height: ROW_HEIGHT - 8, // Adjust for padding
+                                height: ROW_HEIGHT - 8,
                               }}
                             >
                               <span>{value}</span>
@@ -381,15 +493,36 @@ const ResizableGrid = () => {
 
   return (
     <Box className="w-full overflow-auto p-2 bg-white min-h-[400px]">
-      <Typography className="text-[11px] font-bold mb-1 text-black p-[2px_6px] bg-[#f2f2f2] inline-block">
-        {site_id} - {report_type_name || report_type_id}
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography className="text-[11px] font-bold text-black p-[2px_6px] bg-[#f2f2f2] inline-block">
+          {site_id} - {report_type_name || report_type_id}
+        </Typography>
+        
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          startIcon={<SaveIcon />}
+          onClick={handleSaveAll}
+          disabled={loading || Object.keys(modifiedData).length === 0}
+          style={{
+            backgroundColor: '#4472C4',
+            color: 'white',
+            textTransform: 'none',
+            fontSize: '0.75rem',
+            padding: '4px 12px',
+            minWidth: '80px'
+          }}
+        >
+          {loading ? <CircularProgress size={20} color="inherit" /> : 'Save'}
+        </Button>
+      </Box>
 
       <Box 
         className="flex gap-4 overflow-x-auto items-start p-1" 
         style={{ 
           minHeight: `${TABLE_HEIGHT}px`,
-          alignItems: 'stretch' // Ensures all tables stretch to same height
+          alignItems: 'stretch'
         }}
       >
         {categories[0]?.subcategories?.[0]?.table_data?.[report_type_name] && (
@@ -450,6 +583,21 @@ const ResizableGrid = () => {
           })
         )}
       </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          severity={snackbar.severity} 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
