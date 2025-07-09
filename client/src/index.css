@@ -1,3 +1,17 @@
 @import "tailwindcss";
 @import 'ag-grid-community/styles/ag-grid.css';
 @import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+body {
+  margin: 0;
+   font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+  font-weight:200;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}

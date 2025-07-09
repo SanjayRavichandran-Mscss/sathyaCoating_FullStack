@@ -37,6 +37,25 @@ exports.generateNewCompanyId = async () => {
   return "CO001";
 };
 
+// with location
+// exports.insertCompany = async (
+//   company_id,
+//   company_name,
+//   address,
+//   location_id,
+//   spoc_name,
+//   spoc_contact_no
+// ) => {
+//   await db.query(
+//     "INSERT INTO company (company_id, company_name, address, location_id, spoc_name, spoc_contact_no) VALUES (?, ?, ?, ?, ?, ?)",
+//     [company_id, company_name, address, location_id, spoc_name, spoc_contact_no]
+//   );
+// };
+
+
+
+// without location
+
 exports.insertCompany = async (
   company_id,
   company_name,
@@ -51,14 +70,51 @@ exports.insertCompany = async (
   );
 };
 
+exports.fetchCompanyById = async (company_id) => {
+  const [rows] = await db.query(
+    `
+        SELECT c.company_id, c.company_name, c.address, c.spoc_name, c.spoc_contact_no 
+        FROM company c
+        WHERE c.company_id = ?
+    `,
+    [company_id]
+  );
+  return rows.length ? rows[0] : null;
+};
 exports.fetchAllCompanies = async () => {
   const [rows] = await db.query(`
-        SELECT c.company_id, c.company_name, c.address, l.location_name, c.spoc_name, c.spoc_contact_no 
-        FROM company c
-        JOIN location l ON c.location_id = l.location_id
+        SELECT company_id, company_name, address, spoc_name, spoc_contact_no 
+        FROM company
     `);
   return rows;
 };
+
+exports.fetchCompanyById = async (company_id) => {
+  const [rows] = await db.query(
+    `
+        SELECT company_id, company_name, address, spoc_name, spoc_contact_no 
+        FROM company
+        WHERE company_id = ?
+    `,
+    [company_id]
+  );
+  return rows.length ? rows[0] : null;
+};
+
+exports.fetchProjectsByCompanyId = async (company_id) => {
+  const [rows] = await db.query(
+    `
+        SELECT pd_id, project_name
+        FROM project_details
+        WHERE company_id = ?
+        ORDER BY project_name
+    `,
+    [company_id]
+  );
+  return rows;
+};
+
+
 
 exports.updateCompany = async (
   company_id,
@@ -74,7 +130,16 @@ exports.updateCompany = async (
   );
 };
 
-// Fetch project_type_id
+exports.generateNewCompanyId = async () => {
+  const [rows] = await db.query(
+    "SELECT MAX(company_id) AS lastId FROM company"
+  );
+  if (rows[0].lastId) {
+    let lastNum = parseInt(rows[0].lastId.replace("CO", "")) + 1;
+    return `CO${String(lastNum).padStart(3, "0")}`;
+  }
+  return "CO001";
+};
 exports.getProjectTypeId = async (project_type) => {
   const [rows] = await db.query(
     "SELECT type_id FROM project_type WHERE LOWER(type_description) = ?",
@@ -83,7 +148,6 @@ exports.getProjectTypeId = async (project_type) => {
   return rows.length ? rows[0].type_id : null;
 };
 
-// Fetch company_id
 exports.getCompanyId = async (company_name) => {
   const [rows] = await db.query(
     "SELECT company_id FROM company WHERE LOWER(company_name) = ?",
@@ -92,7 +156,6 @@ exports.getCompanyId = async (company_name) => {
   return rows.length ? rows[0].company_id : null;
 };
 
-// Generate new project ID
 exports.generateNewProjectId = async () => {
   const [rows] = await db.query(
     "SELECT MAX(pd_id) AS lastId FROM project_details"
@@ -104,7 +167,7 @@ exports.generateNewProjectId = async () => {
   return "PD001";
 };
 
-// Insert project details
+
 exports.insertProject = async (
   project_id,
   project_type_id,
@@ -116,7 +179,6 @@ exports.insertProject = async (
     [project_id, project_type_id, company_id, project_name]
   );
 };
-// Fetch incharge_id
 exports.getInchargeId = async (incharge_type) => {
   const [rows] = await db.query(
     "SELECT incharge_id FROM site_incharge WHERE incharge_type = ?",
@@ -125,7 +187,6 @@ exports.getInchargeId = async (incharge_type) => {
   return rows.length ? rows[0].incharge_id : null;
 };
 
-// Fetch workforce_id
 exports.getWorkforceId = async (workforce_type) => {
   const [rows] = await db.query(
     "SELECT workforce_id FROM workforce_type WHERE workforce_type = ?",
@@ -134,7 +195,6 @@ exports.getWorkforceId = async (workforce_type) => {
   return rows.length ? rows[0].workforce_id : null;
 };
 
-// Generate new site ID
 exports.generateNewSiteId = async () => {
   const [rows] = await db.query(
     "SELECT MAX(site_id) AS lastId FROM site_details"
@@ -146,7 +206,6 @@ exports.generateNewSiteId = async () => {
   return "ST001";
 };
 
-// Insert site details (with pd_id as foreign key)
 exports.insertSite = async (
   site_id,
   site_name,
@@ -155,10 +214,11 @@ exports.insertSite = async (
   end_date,
   incharge_id,
   workforce_id,
-  pd_id
+  pd_id,
+  location_id // Added location_id
 ) => {
   await db.query(
-    "INSERT INTO site_details (site_id, site_name, po_number, start_date, end_date, incharge_id, workforce_id, pd_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO site_details (site_id, site_name, po_number, start_date, end_date, incharge_id, workforce_id, pd_id, location_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       site_id,
       site_name,
@@ -168,6 +228,7 @@ exports.insertSite = async (
       incharge_id,
       workforce_id,
       pd_id,
+      location_id
     ]
   );
 };
@@ -187,7 +248,6 @@ exports.getProjectType = async () => {
   return rows;
 };
 
-// Get all projects with their site details and related information
 exports.getAllProjectsWithSites = async () => {
   const [rows] = await db.query(`
         SELECT 
@@ -201,27 +261,23 @@ exports.getAllProjectsWithSites = async () => {
             sd.po_number,
             sd.start_date,
             sd.end_date,
-            si.incharge_type,
-            wt.workforce_type
+            si.incharge_type
         FROM 
             project_details pd
         JOIN 
-            company c ON pd.company_id = c.company_id
+            company c ON pd.companyyles_id = c.company_id
         JOIN 
             project_type pt ON pd.project_type_id = pt.type_id
         LEFT JOIN 
             site_details sd ON pd.pd_id = sd.pd_id
         LEFT JOIN 
             site_incharge si ON sd.incharge_id = si.incharge_id
-        LEFT JOIN 
-            workforce_type wt ON sd.workforce_id = wt.workforce_id
         ORDER BY 
             pd.project_name, sd.site_name
     `);
   return rows;
 };
 
-// Get all projects with sites for a specific company
 exports.getAllProjectsWithSitesByCompanyId = async (companyId) => {
   const [rows] = await db.query(
     `
@@ -237,7 +293,7 @@ exports.getAllProjectsWithSitesByCompanyId = async (companyId) => {
             sd.start_date,
             sd.end_date,
             si.incharge_type,
-            wt.workforce_type
+            l.location_name
         FROM 
             project_details pd
         JOIN 
@@ -249,7 +305,7 @@ exports.getAllProjectsWithSitesByCompanyId = async (companyId) => {
         LEFT JOIN 
             site_incharge si ON sd.incharge_id = si.incharge_id
         LEFT JOIN 
-            workforce_type wt ON sd.workforce_id = wt.workforce_id
+            location l ON sd.location_id = l.location_id
         WHERE 
             c.company_id = ?
         ORDER BY 
@@ -260,7 +316,6 @@ exports.getAllProjectsWithSitesByCompanyId = async (companyId) => {
   return rows;
 };
 
-// Fetch project by name and type
 exports.getProjectByNameAndType = async (project_name, project_type_id) => {
   const [rows] = await db.query(
     "SELECT pd_id FROM project_details WHERE LOWER(project_name) = ? AND project_type_id = ?",
@@ -270,8 +325,9 @@ exports.getProjectByNameAndType = async (project_name, project_type_id) => {
 };
 
 
-
-
-
-
-
+exports.getAllLocations = async () => {
+  const [rows] = await db.query(
+    "SELECT location_id, location_name FROM location ORDER BY location_name"
+  );
+  return rows;
+};

@@ -25,7 +25,9 @@ const errorResponse = (
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await reckonerModel.fetchAllCategories();
-    successResponse(res, categories, "Categories fetched successfully");
+    // Ensure categories is an array
+    const data = Array.isArray(categories) ? categories : [];
+    successResponse(res, data, "Categories fetched successfully");
   } catch (error) {
     errorResponse(res, "Error fetching categories", 500, error);
   }
@@ -90,7 +92,9 @@ exports.deleteCategory = async (req, res) => {
 exports.getAllSubcategories = async (req, res) => {
   try {
     const subcategories = await reckonerModel.fetchAllSubcategories();
-    successResponse(res, subcategories, "Subcategories fetched successfully");
+    // Ensure subcategories is an array
+    const data = Array.isArray(subcategories) ? subcategories : [];
+    successResponse(res, data, "Subcategories fetched successfully");
   } catch (error) {
     errorResponse(res, "Error fetching subcategories", 500, error);
   }
@@ -163,35 +167,36 @@ exports.deleteSubcategory = async (req, res) => {
 };
 
 // ==================== Work Items Controllers ====================
-
 exports.getAllWorkItems = async (req, res) => {
   try {
     const workItems = await reckonerModel.fetchAllWorkItems();
-    successResponse(res, workItems, "Work items fetched successfully");
+    // Ensure workItems is an array
+    const data = Array.isArray(workItems) ? workItems : [];
+    successResponse(res, data, "Work descriptions fetched successfully");
   } catch (error) {
-    errorResponse(res, "Error fetching work items", 500, error);
+    errorResponse(res, "Error fetching work descriptions", 500, error);
   }
 };
 
 exports.getWorkItemById = async (req, res) => {
   try {
     const workItem = await reckonerModel.fetchWorkItemById(req.params.id);
-    if (!workItem) return errorResponse(res, "Work item not found", 404);
-    successResponse(res, workItem, "Work item fetched successfully");
+    if (!workItem) return errorResponse(res, "Work description not found", 404);
+    successResponse(res, workItem, "Work description fetched successfully");
   } catch (error) {
-    errorResponse(res, "Error fetching work item", 500, error);
+    errorResponse(res, "Error fetching work description", 500, error);
   }
 };
 
 exports.createWorkItem = async (req, res) => {
   try {
-    const { description } = req.body;
-    if (!description) return errorResponse(res, "Description is required", 400);
+    const { desc_name } = req.body;
+    if (!desc_name) return errorResponse(res, "Description name is required", 400);
 
-    const newItem = await reckonerModel.createSingleWorkItem(description);
-    successResponse(res, newItem, "Work item created successfully", 201);
+    const newItem = await reckonerModel.createSingleWorkItem(desc_name);
+    successResponse(res, newItem, "Work description created successfully", 201);
   } catch (error) {
-    errorResponse(res, "Error creating work item", 500, error);
+    errorResponse(res, "Error creating work description", 500, error);
   }
 };
 
@@ -203,28 +208,28 @@ exports.createMultipleWorkItems = async (req, res) => {
     }
 
     const newItems = await reckonerModel.createMultipleWorkItems(descriptions);
-    successResponse(res, newItems, "Work items created successfully", 201);
+    successResponse(res, newItems, "Work descriptions created successfully", 201);
   } catch (error) {
-    errorResponse(res, "Error creating work items", 500, error);
+    errorResponse(res, "Error creating work descriptions", 500, error);
   }
 };
 
 exports.updateWorkItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { item_description } = req.body;
-    if (!item_description)
-      return errorResponse(res, "Item description is required", 400);
+    const { desc_name } = req.body;
+    if (!desc_name)
+      return errorResponse(res, "Description name is required", 400);
 
     const updatedWorkItem = await reckonerModel.updateWorkItem(
       id,
-      item_description
+      desc_name
     );
-    if (!updatedWorkItem) return errorResponse(res, "Work item not found", 404);
+    if (!updatedWorkItem) return errorResponse(res, "Work description not found", 404);
 
-    successResponse(res, updatedWorkItem, "Work item updated successfully");
+    successResponse(res, updatedWorkItem, "Work description updated successfully");
   } catch (error) {
-    errorResponse(res, "Error updating work item", 500, error);
+    errorResponse(res, "Error updating work description", 500, error);
   }
 };
 
@@ -232,14 +237,13 @@ exports.deleteWorkItem = async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await reckonerModel.deleteWorkItem(id);
-    if (!deleted) return errorResponse(res, "Work item not found", 404);
+    if (!deleted) return errorResponse(res, "Work description not found", 404);
 
-    successResponse(res, null, "Work item deleted successfully");
+    successResponse(res, null, "Work description deleted successfully");
   } catch (error) {
-    errorResponse(res, "Error deleting work item", 500, error);
+    errorResponse(res, "Error deleting work description", 500, error);
   }
 };
-
 // ==================== Reckoner Controllers ====================
 
 exports.getSiteByPoNumber = async (req, res) => {
@@ -275,6 +279,7 @@ exports.saveReckonerData = async (req, res) => {
             category_id: category.categoryId,
             subcategory_id: subcategory.subcategoryId,
             item_id: item.itemId,
+            desc_id: item.descId, // Added to store desc_id
             po_quantity: parseFloat(item.poQuantity) || 0,
             uom: item.uom || "",
             rate: parseFloat(item.rate) || 0,
@@ -384,58 +389,66 @@ exports.updateCompletionStatus = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
 exports.checkPoReckoner = async (req, res) => {
   try {
-      const site_id = req.params.site_id;
-      
-      if (!site_id) {
-          return res.status(400).json({
-              status: 'error',
-              message: 'site_id parameter is required'
-          });
-      }
+    const site_id = req.params.site_id;
 
-      const result = await reckonerModel.checkPoReckonerExists(site_id);
-      
-      if (result.exists) {
-          res.status(200).json({
-              status: 'success',
-              message: 'po_reckoner created',
-              data: {
-                  site_id: result.site_id,
-                  site_name: result.site_name
-              }
-          });
-      } else {
-          res.status(200).json({
-              status: 'success',
-              message: 'po_reckoner not created',
-              data: {
-                  site_id: result.site_id,
-                  site_name: result.site_name
-              }
-          });
-      }
+    if (!site_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "site_id parameter is required",
+      });
+    }
+
+    const result = await reckonerModel.checkPoReckonerExists(site_id);
+
+    if (result.exists) {
+      res.status(200).json({
+        status: "success",
+        message: "po_reckoner created",
+        data: {
+          site_id: result.site_id,
+          site_name: result.site_name,
+        },
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        message: "po_reckoner not created",
+        data: {
+          site_id: result.site_id,
+          site_name: result.site_name,
+        },
+      });
+    }
   } catch (error) {
-      if (error.message === 'Site not found') {
-          res.status(404).json({
-              status: 'error',
-              message: 'Site not found'
-          });
-      } else {
-          console.error('Error checking PO Reckoner:', error);
-          res.status(500).json({
-              status: 'error',
-              message: 'Internal server error'
-          });
-      }
+    if (error.message === "Site not found") {
+      res.status(404).json({
+        status: "error",
+        message: "Site not found",
+      });
+    } else {
+      console.error("Error checking PO Reckoner:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+      });
+    }
+  }
+};
+
+exports.getSiteById = async (req, res) => {
+  try {
+    const { site_id } = req.params;
+    if (!site_id) {
+      return errorResponse(res, "Site ID is required", 400);
+    }
+    const site = await reckonerModel.getSiteById(site_id);
+    if (!site) {
+      return errorResponse(res, "Site not found for the given site ID", 404);
+    }
+    successResponse(res, site, "Site fetched successfully");
+  } catch (error) {
+    errorResponse(res, "Error fetching site by site ID", 500, error);
   }
 };

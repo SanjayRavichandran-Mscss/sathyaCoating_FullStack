@@ -22,7 +22,8 @@ const {
   getReportIdsForSite,
   getDynamicTableData,
   getDynamicTableDataByReportType,
-  updateWorksheetData
+  updateWorksheetData,
+  getSiteDetails
 } = require("../models/sheetModel");
 
 exports.createConsumable = async (req, res) => {
@@ -898,11 +899,136 @@ exports.getWorksheetData = async (req, res) => {
 
 
 // filter by report_type_id
+// exports.getWorksheetDataByReportType = async (req, res) => {
+//   try {
+//     const { site_id, report_type_id } = req.params;
+
+//     // 1. Get all categories and subcategories for the site
+//     const categories = await getSiteCategoriesAndSubcategories(site_id);
+    
+//     if (!categories || categories.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No categories found for this site",
+//       });
+//     }
+
+//     // 2. Get the report type name
+//     const [reportType] = await db.query(
+//       `SELECT type_name 
+//        FROM report_type 
+//        WHERE type_id = ?`,
+//       [report_type_id]
+//     );
+//     const typeName = reportType[0]?.type_name || 'reports';
+
+//     // 3. Group categories and subcategories
+//     const groupedCategories = {};
+//     categories.forEach(item => {
+//       if (!groupedCategories[item.category_id]) {
+//         groupedCategories[item.category_id] = {
+//           category_id: item.category_id,
+//           category_name: item.category_name,
+//           sanitized_name: sanitizeName(item.category_name),
+//           subcategories: []
+//         };
+//       }
+      
+//       // Check if subcategory already exists to avoid duplicates
+//       const subcatExists = groupedCategories[item.category_id].subcategories.some(
+//         sub => sub.subcategory_id === item.subcategory_id
+//       );
+      
+//       if (!subcatExists) {
+//         groupedCategories[item.category_id].subcategories.push({
+//           subcategory_id: item.subcategory_id,
+//           subcategory_name: item.subcategory_name,
+//           sanitized_name: sanitizeName(item.subcategory_name)
+//         });
+//       }
+//     });
+
+//     // 4. Get data for each dynamic table
+//     const result = {
+//       site_id: site_id,
+//       report_type_id: parseInt(report_type_id),
+//       report_type_name: typeName, // Add report type name to response
+//       categories: []
+//     };
+
+//     for (const categoryId in groupedCategories) {
+//       const category = groupedCategories[categoryId];
+//       const categoryResult = {
+//         category_id: category.category_id,
+//         category_name: category.category_name,
+//         table_name: category.sanitized_name,
+//         subcategories: []
+//       };
+
+//       // Process each subcategory
+//       for (const subcategory of category.subcategories) {
+//         try {
+//           const tableData = await getDynamicTableDataByReportType(
+//             category.category_name, 
+//             site_id, 
+//             report_type_id,
+//             category.category_id,
+//             subcategory.subcategory_id
+//           );
+          
+//           // Add the report type name to each subcategory for reference
+//           categoryResult.subcategories.push({
+//             subcategory_id: subcategory.subcategory_id,
+//             subcategory_name: subcategory.subcategory_name,
+//             table_data: {
+//               ...tableData,
+//               report_type_name: typeName // Include type name in table data
+//             }
+//           });
+//         } catch (error) {
+//           console.error(`Error processing subcategory ${subcategory.subcategory_name}:`, error);
+//           categoryResult.subcategories.push({
+//             subcategory_id: subcategory.subcategory_id,
+//             subcategory_name: subcategory.subcategory_name,
+//             error: `Failed to fetch table data: ${error.message}`
+//           });
+//         }
+//       }
+
+//       result.categories.push(categoryResult);
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       data: result
+//     });
+
+//   } catch (error) {
+//     console.error("Error fetching worksheet data by report type:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch worksheet data",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
 exports.getWorksheetDataByReportType = async (req, res) => {
   try {
     const { site_id, report_type_id } = req.params;
 
-    // 1. Get all categories and subcategories for the site
+    // 1. Get site details (site_name and po_number)
+    const siteDetails = await getSiteDetails(site_id);
+
+    if (!siteDetails || siteDetails.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No site details found for this site_id",
+      });
+    }
+
+    // 2. Get all categories and subcategories for the site
     const categories = await getSiteCategoriesAndSubcategories(site_id);
     
     if (!categories || categories.length === 0) {
@@ -912,7 +1038,7 @@ exports.getWorksheetDataByReportType = async (req, res) => {
       });
     }
 
-    // 2. Get the report type name
+    // 3. Get the report type name
     const [reportType] = await db.query(
       `SELECT type_name 
        FROM report_type 
@@ -921,7 +1047,7 @@ exports.getWorksheetDataByReportType = async (req, res) => {
     );
     const typeName = reportType[0]?.type_name || 'reports';
 
-    // 3. Group categories and subcategories
+    // 4. Group categories and subcategories
     const groupedCategories = {};
     categories.forEach(item => {
       if (!groupedCategories[item.category_id]) {
@@ -947,11 +1073,13 @@ exports.getWorksheetDataByReportType = async (req, res) => {
       }
     });
 
-    // 4. Get data for each dynamic table
+    // 5. Get data for each dynamic table
     const result = {
       site_id: site_id,
+      site_name: siteDetails[0].site_name, // Add site_name to response
+      po_number: siteDetails[0].po_number, // Add po_number to response
       report_type_id: parseInt(report_type_id),
-      report_type_name: typeName, // Add report type name to response
+      report_type_name: typeName,
       categories: []
     };
 
@@ -981,7 +1109,7 @@ exports.getWorksheetDataByReportType = async (req, res) => {
             subcategory_name: subcategory.subcategory_name,
             table_data: {
               ...tableData,
-              report_type_name: typeName // Include type name in table data
+              report_type_name: typeName
             }
           });
         } catch (error) {
@@ -1011,9 +1139,6 @@ exports.getWorksheetDataByReportType = async (req, res) => {
     });
   }
 };
-
-
-
 
 
 // Helper function (add this at the top with other imports)

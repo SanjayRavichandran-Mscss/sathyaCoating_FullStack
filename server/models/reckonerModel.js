@@ -24,7 +24,7 @@ const generateNextId = async (prefix, table, idColumn) => {
 exports.fetchAllCategories = async () => {
   try {
     const [rows] = await db.query("SELECT * FROM item_category");
-    return rows;
+    return Array.isArray(rows) ? rows : [];
   } catch (error) {
     console.error("Error in fetchAllCategories:", error);
     throw error;
@@ -93,13 +93,12 @@ exports.deleteCategory = async (id) => {
 exports.fetchAllSubcategories = async () => {
   try {
     const [rows] = await db.query("SELECT * FROM item_subcategory");
-    return rows;
+    return Array.isArray(rows) ? rows : [];
   } catch (error) {
     console.error("Error in fetchAllSubcategories:", error);
     throw error;
   }
 };
-
 exports.fetchSubcategoryById = async (id) => {
   try {
     const [rows] = await db.query(
@@ -162,11 +161,10 @@ exports.deleteSubcategory = async (id) => {
 };
 
 // ==================== Work Items Operations ====================
-
 exports.fetchAllWorkItems = async () => {
   try {
-    const [rows] = await db.query("SELECT * FROM description_of_work");
-    return rows;
+    const [rows] = await db.query("SELECT * FROM work_descriptions");
+    return Array.isArray(rows) ? rows : [];
   } catch (error) {
     console.error("Error in fetchAllWorkItems:", error);
     throw error;
@@ -176,7 +174,7 @@ exports.fetchAllWorkItems = async () => {
 exports.fetchWorkItemById = async (id) => {
   try {
     const [rows] = await db.query(
-      "SELECT * FROM description_of_work WHERE item_id = ?",
+      "SELECT * FROM work_descriptions WHERE desc_id = ?",
       [id]
     );
     return rows[0] || null;
@@ -186,44 +184,17 @@ exports.fetchWorkItemById = async (id) => {
   }
 };
 
-const generateWorkItemIds = async (count) => {
+exports.createSingleWorkItem = async (desc_name) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
-    const [results] = await connection.query(
-      "SELECT item_id FROM description_of_work ORDER BY CAST(SUBSTRING(item_id, 6) AS UNSIGNED)"
+    const [result] = await connection.query(
+      "INSERT INTO work_descriptions (desc_name) VALUES (?)",
+      [desc_name]
     );
-
-    const existingNumbers = results
-      .map((item) => {
-        const numPart = item.item_id.replace("Item-", "");
-        const num = parseInt(numPart);
-        return isNaN(num) ? 0 : num;
-      })
-      .filter((num) => num > 0);
-
-    let nextNum =
-      existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
-    return Array.from({ length: count }, (_, i) => `Item-${nextNum + i}`);
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
-};
-
-exports.createSingleWorkItem = async (description) => {
-  const connection = await db.getConnection();
-  try {
-    await connection.beginTransaction();
-    const [newId] = await generateWorkItemIds(1);
-    await connection.query(
-      "INSERT INTO description_of_work (item_id, item_description) VALUES (?, ?)",
-      [newId, description]
-    );
+    const newId = result.insertId;
     await connection.commit();
-    return { item_id: newId, item_description: description };
+    return { desc_id: newId, desc_name };
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -236,15 +207,14 @@ exports.createMultipleWorkItems = async (descriptions) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
-    const newIds = await generateWorkItemIds(descriptions.length);
     const items = [];
 
-    for (let i = 0; i < descriptions.length; i++) {
-      await connection.query(
-        "INSERT INTO description_of_work (item_id, item_description) VALUES (?, ?)",
-        [newIds[i], descriptions[i]]
+    for (const desc_name of descriptions) {
+      const [result] = await connection.query(
+        "INSERT INTO work_descriptions (desc_name) VALUES (?)",
+        [desc_name]
       );
-      items.push({ item_id: newIds[i], item_description: descriptions[i] });
+      items.push({ desc_id: result.insertId, desc_name });
     }
 
     await connection.commit();
@@ -257,14 +227,14 @@ exports.createMultipleWorkItems = async (descriptions) => {
   }
 };
 
-exports.updateWorkItem = async (id, item_description) => {
+exports.updateWorkItem = async (id, desc_name) => {
   try {
     const [result] = await db.query(
-      "UPDATE description_of_work SET item_description = ? WHERE item_id = ?",
-      [item_description, id]
+      "UPDATE work_descriptions SET desc_name = ? WHERE desc_id = ?",
+      [desc_name, id]
     );
     if (result.affectedRows === 0) return null;
-    return { item_id: id, item_description };
+    return { desc_id: id, desc_name };
   } catch (error) {
     console.error("Error in updateWorkItem:", error);
     throw error;
@@ -274,7 +244,7 @@ exports.updateWorkItem = async (id, item_description) => {
 exports.deleteWorkItem = async (id) => {
   try {
     const [result] = await db.query(
-      "DELETE FROM description_of_work WHERE item_id = ?",
+      "DELETE FROM work_descriptions WHERE desc_id = ?",
       [id]
     );
     return result.affectedRows > 0;
@@ -316,8 +286,8 @@ exports.saveReckonerData = async (data) => {
     const insertedIds = [];
     const query = `
         INSERT INTO po_reckoner 
-        (site_id, category_id, subcategory_id, item_id, po_quantity, uom, rate, value)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (site_id, category_id, subcategory_id, item_id, desc_id, po_quantity, uom, rate, value)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
     for (const item of data) {
@@ -326,6 +296,7 @@ exports.saveReckonerData = async (data) => {
         item.category_id,
         item.subcategory_id,
         item.item_id,
+        item.desc_id,
         item.po_quantity,
         item.uom,
         item.rate,
@@ -366,7 +337,7 @@ exports.getAllReckonerWithStatus = async () => {
               ic.category_name,
               isc.subcategory_name,
               pr.item_id,
-              dow.item_description AS description_of_work,
+              wd.desc_name AS work_descriptions,
               cs.completion_id,
               cs.area_completed,
               cs.rate AS completion_rate,
@@ -386,7 +357,7 @@ exports.getAllReckonerWithStatus = async () => {
           LEFT JOIN 
               item_subcategory isc ON pr.subcategory_id = isc.subcategory_id
           LEFT JOIN 
-              description_of_work dow ON pr.item_id = dow.item_id
+              work_descriptions wd ON pr.desc_id = wd.desc_id
           LEFT JOIN 
               completion_status cs ON pr.rec_id = cs.rec_id
           ORDER BY pr.rec_id DESC
@@ -517,5 +488,19 @@ exports.checkPoReckonerExists = async (site_id) => {
   } catch (error) {
       console.error('Database error:', error);
       throw error;
+  }
+};
+
+
+exports.getSiteById = async (site_id) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT site_id, site_name, po_number FROM site_details WHERE site_id = ?",
+      [site_id]
+    );
+    return rows[0] || null;
+  } catch (error) {
+    console.error("Error in getSiteById:", error);
+    throw error;
   }
 };

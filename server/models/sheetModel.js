@@ -498,6 +498,29 @@ exports.checkSiteInReportMaster = async (siteId) => {
 
 // For getting worksheet datas by site_id
 
+// exports.getSiteCategoriesAndSubcategories = async (siteId) => {
+//   try {
+//     const [rows] = await db.query(
+//       `SELECT DISTINCT 
+//         pr.category_id, 
+//         ic.category_name,
+//         pr.subcategory_id,
+//         isc.subcategory_name
+//        FROM po_reckoner pr
+//        JOIN item_category ic ON pr.category_id = ic.category_id
+//        JOIN item_subcategory isc ON pr.subcategory_id = isc.subcategory_id
+//        WHERE pr.site_id = ?
+//        ORDER BY pr.category_id, pr.subcategory_id`,
+//       [siteId]
+//     );
+//     return rows;
+//   } catch (error) {
+//     throw error;
+//   }
+// };
+
+
+// Get categories and subcategories for a site
 exports.getSiteCategoriesAndSubcategories = async (siteId) => {
   try {
     const [rows] = await db.query(
@@ -511,6 +534,21 @@ exports.getSiteCategoriesAndSubcategories = async (siteId) => {
        JOIN item_subcategory isc ON pr.subcategory_id = isc.subcategory_id
        WHERE pr.site_id = ?
        ORDER BY pr.category_id, pr.subcategory_id`,
+      [siteId]
+    );
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get site details (site_name and po_number) by site_id
+exports.getSiteDetails = async (siteId) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT site_name, po_number 
+       FROM site_details 
+       WHERE site_id = ?`,
       [siteId]
     );
     return rows;

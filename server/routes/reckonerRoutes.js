@@ -48,4 +48,6 @@ router.patch(
 router.get('/check-po-reckoner/:site_id', reckonerController.checkPoReckoner);
 
 
+router.get("/sites-by-id/:site_id", reckonerController.getSiteById);
+
 module.exports = router;
