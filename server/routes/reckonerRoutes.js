@@ -50,4 +50,17 @@ router.get('/check-po-reckoner/:site_id', reckonerController.checkPoReckoner);
 
 router.get("/sites-by-id/:site_id", reckonerController.getSiteById);
 
+
+// **********************************************
+
+
+
+// Company routes
+router.get("/companies", reckonerController.getAllCompanies);
+
+// Project routes
+router.get("/projects/:company_id", reckonerController.getProjectsByCompanyId);
+
+// Site routes
+router.get("/sites-by-project/:pd_id", reckonerController.getSitesByProjectId);
 module.exports = router;

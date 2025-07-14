@@ -331,3 +331,35 @@ exports.getAllLocations = async () => {
   );
   return rows;
 };
+
+
+
+exports.getAllProjectsWithSites = async () => {
+  const [rows] = await db.query(`
+    SELECT 
+        pd.pd_id AS project_id,
+        pd.project_name,
+        pt.type_description AS project_type,
+        c.company_name,
+        c.company_id,
+        sd.site_id,
+        sd.site_name,
+        sd.po_number,
+        sd.start_date,
+        sd.end_date,
+        si.incharge_type
+    FROM 
+        project_details pd
+    JOIN 
+        company c ON pd.company_id = c.company_id
+    JOIN 
+        project_type pt ON pd.project_type_id = pt.type_id
+    LEFT JOIN 
+        site_details sd ON pd.pd_id = sd.pd_id
+    LEFT JOIN 
+        site_incharge si ON sd.incharge_id = si.incharge_id
+    ORDER BY 
+        pd.project_name, sd.site_name
+  `);
+  return rows;
+};

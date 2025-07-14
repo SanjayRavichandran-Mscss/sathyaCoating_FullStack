@@ -343,3 +343,51 @@ exports.getAllLocations = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
+exports.getAllProjectsWithSites = async (req, res) => {
+  try {
+    const projects = await projectModel.getAllProjectsWithSites();
+    const transformedProjects = projects.reduce((acc, project) => {
+      const existingProject = acc.find(p => p.project_id === project.project_id);
+      if (existingProject) {
+        if (project.site_id) {
+          existingProject.sites.push({
+            site_id: project.site_id,
+            site_name: project.site_name,
+            po_number: project.po_number,
+            start_date: project.start_date,
+            end_date: project.end_date,
+            incharge_type: project.incharge_type || "N/A",
+            workforce_type: project.workforce_type || "N/A",
+            location_name: project.location_name || "N/A"
+          });
+        }
+      } else {
+        const newProject = {
+          project_id: project.project_id,
+          project_name: project.project_name,
+          project_type: project.project_type,
+          company_id: project.company_id,
+          company_name: project.company_name,
+          sites: project.site_id ? [{
+            site_id: project.site_id,
+            site_name: project.site_name,
+            po_number: project.po_number,
+            start_date: project.start_date,
+            end_date: project.end_date,
+            incharge_type: project.incharge_type || "N/A",
+            workforce_type: project.workforce_type || "N/A",
+            location_name: project.location_name || "N/A"
+          }] : []
+        };
+        acc.push(newProject);
+      }
+      return acc;
+    }, []);
+    res.status(200).json(transformedProjects);
+  } catch (error) {
+    console.error("Detailed error in getAllProjectsWithSites:", error.message, error.stack);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+};
