@@ -1040,3 +1040,18 @@ exports.checkPoReckonerExists = async (site_id) => {
     throw error;
   }
 };
+
+
+// ==================== Site Operations ====================
+
+exports.fetchAllSites = async () => {
+  try {
+    const [rows] = await db.query(
+      "SELECT site_id, site_name, po_number FROM site_details ORDER BY site_name ASC"
+    );
+    return Array.isArray(rows) ? rows : [];
+  } catch (error) {
+    console.error("Error in fetchAllSites:", error);
+    throw error;
+  }
+};

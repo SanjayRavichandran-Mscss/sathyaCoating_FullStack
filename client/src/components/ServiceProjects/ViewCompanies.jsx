@@ -2,19 +2,17 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Building2,
-  PlusCircle,
   Edit3,
   X,
   Loader2,
   Save,
   Home,
   User,
-  Phone,
-  Warehouse
+  Phone
 } from "lucide-react";
 import Swal from "sweetalert2";
 
-const ViewCompanies = ({ onCreateProject, onViewProjects, onUpdate }) => {
+const ViewCompanies = ({ onUpdate }) => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -259,22 +257,6 @@ const ViewCompanies = ({ onCreateProject, onViewProjects, onUpdate }) => {
                   </button>
                   
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => onCreateProject(company.company_id)}
-                      className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center"
-                      aria-label="Create Project & Sites"
-                      title="Create Project & Sites"
-                    >
-                      <PlusCircle className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => onViewProjects(company.company_id)}
-                      className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 flex items-center justify-center"
-                      aria-label="View Projects"
-                      title="View Projects"
-                    >
-                      <Warehouse className="h-4 w-4" />
-                    </button>
                     <button
                       onClick={() => handleEdit(company)}
                       className="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all duration-200 flex items-center justify-center"

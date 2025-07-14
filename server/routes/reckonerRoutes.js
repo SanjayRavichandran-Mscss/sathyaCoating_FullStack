@@ -63,4 +63,8 @@ router.get("/projects/:company_id", reckonerController.getProjectsByCompanyId);
 
 // Site routes
 router.get("/sites-by-project/:pd_id", reckonerController.getSitesByProjectId);
+
+// Site routes
+router.get("/sites", reckonerController.getAllSites);
+
 module.exports = router;

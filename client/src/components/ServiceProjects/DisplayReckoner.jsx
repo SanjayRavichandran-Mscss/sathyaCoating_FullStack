@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -10,7 +10,6 @@ import {
   FileText,
   IndianRupee,
   Percent,
-  Square,
   TrendingUp,
   MapPin,
   HardHat,
@@ -20,6 +19,8 @@ import {
   BrickWall,
   ReceiptText,
   Grid2x2Check,
+  Search,
+  ChevronDown,
 } from "lucide-react";
 
 const DisplayReckoner = () => {
@@ -30,32 +31,68 @@ const DisplayReckoner = () => {
   const [editingData, setEditingData] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [alert, setAlert] = useState({ type: "", message: "" });
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
   const [poGroups, setPoGroups] = useState([]);
-  const [totalPages, setTotalPages] = useState(0);
-
-  // Site info state
   const [siteInfo, setSiteInfo] = useState(null);
   const [loadingSite, setLoadingSite] = useState(false);
+  const [siteOptions, setSiteOptions] = useState([]);
+  const [selectedSite, setSelectedSite] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingSites, setLoadingSites] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  // Navigation hook
   const navigate = useNavigate();
 
   useEffect(() => {
+    fetchSites();
     fetchReckonerData();
   }, []);
 
   useEffect(() => {
-    if (filteredData.length > 0) {
+    if (filteredData.length > 0 && siteOptions.length > 0) {
       groupDataByPoNumber();
     }
-  }, [filteredData]);
+  }, [filteredData, siteOptions]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchSites = async () => {
+    try {
+      setLoadingSites(true);
+      const res = await axios.get("http://localhost:5000/reckoner/sites");
+      if (res.data.success) {
+        const options = res.data.data.map((site) => ({
+          po_number: site.po_number,
+          site_name: site.site_name,
+          site_id: site.site_id,
+          label: `${site.site_name} (PO: ${site.po_number})`,
+        }));
+        setSiteOptions(options);
+        if (options.length > 0) {
+          setSelectedSite(options[0].po_number);
+          fetchSiteInfo(options[0].po_number);
+        }
+      } else {
+        showAlert("error", "Failed to fetch site options");
+      }
+    } catch (error) {
+      console.error("Error fetching sites:", error);
+      showAlert("error", "Failed to fetch site options");
+    } finally {
+      setLoadingSites(false);
+    }
+  };
 
   const groupDataByPoNumber = () => {
     const groups = {};
-
     filteredData.forEach((item) => {
       if (!groups[item.po_number]) {
         groups[item.po_number] = [];
@@ -65,13 +102,6 @@ const DisplayReckoner = () => {
 
     const poGroupsArray = Object.values(groups);
     setPoGroups(poGroupsArray);
-    setTotalPages(poGroupsArray.length);
-    setCurrentPage(1); // Reset to first page when data changes
-
-    // Fetch site info for the first PO group when data is initially loaded
-    if (poGroupsArray.length > 0 && poGroupsArray[0][0]) {
-      fetchSiteInfo(poGroupsArray[0][0].po_number);
-    }
   };
 
   const fetchSiteInfo = async (poNumber) => {
@@ -81,13 +111,33 @@ const DisplayReckoner = () => {
         `http://localhost:5000/reckoner/sites/${poNumber}`
       );
       if (res.data.success) {
-        setSiteInfo(res.data.data); // Assuming data includes site_id and site_name
+        setSiteInfo(res.data.data);
       } else {
-        setSiteInfo(null);
+        const fallbackSite = siteOptions.find(
+          (option) => option.po_number === poNumber
+        );
+        setSiteInfo(
+          fallbackSite
+            ? {
+                site_name: fallbackSite.site_name,
+                site_id: fallbackSite.site_id,
+              }
+            : null
+        );
       }
     } catch (error) {
       console.error("Error fetching site info:", error);
-      setSiteInfo(null);
+      const fallbackSite = siteOptions.find(
+        (option) => option.po_number === poNumber
+      );
+      setSiteInfo(
+        fallbackSite
+          ? {
+              site_name: fallbackSite.site_name,
+              site_id: fallbackSite.site_id,
+            }
+          : null
+      );
     } finally {
       setLoadingSite(false);
     }
@@ -106,31 +156,23 @@ const DisplayReckoner = () => {
       setReckonerData(data);
       setFilteredData(data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       showAlert("error", "Failed to fetch reckoner data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-      // Fetch site info for the previous PO group
-      if (poGroups[currentPage - 2] && poGroups[currentPage - 2][0]) {
-        fetchSiteInfo(poGroups[currentPage - 2][0].po_number);
-      }
-    }
+  const handleSiteSelect = (poNumber) => {
+    setSelectedSite(poNumber);
+    fetchSiteInfo(poNumber);
+    setDropdownOpen(false);
+    setSearchQuery("");
   };
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-      // Fetch site info for the next PO group
-      if (poGroups[currentPage] && poGroups[currentPage][0]) {
-        fetchSiteInfo(poGroups[currentPage][0].po_number);
-      }
-    }
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
   };
 
   const handleEdit = (record) => {
@@ -168,7 +210,7 @@ const DisplayReckoner = () => {
       await fetchReckonerData();
       setEditingId(null);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       showAlert("error", "Failed to update data");
     } finally {
       setSubmitting(false);
@@ -178,11 +220,11 @@ const DisplayReckoner = () => {
   const renderStatusTag = (status) => {
     const icon =
       status === "Completed" ? (
-        <CalendarCheck className="w-4 h-4 text-green-600 mr-1" />
+        <CalendarCheck className="w-4 h-4 text-green-600 mr-2" />
       ) : status === "In Progress" ? (
-        <HardHat className="w-4 h-4 text-blue-600 mr-1" />
+        <HardHat className="w-4 h-4 text-blue-600 mr-2" />
       ) : (
-        <AlertCircle className="w-4 h-4 text-orange-500 mr-1" />
+        <AlertCircle className="w-4 h-4 text-orange-500 mr-2" />
       );
 
     const color =
@@ -194,7 +236,7 @@ const DisplayReckoner = () => {
 
     return (
       <div
-        className={`flex items-center px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${color}`}
+        className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${color}`}
       >
         {icon}
         {status}
@@ -203,343 +245,328 @@ const DisplayReckoner = () => {
   };
 
   const handleReportRedirect = (reportTypeId) => {
-    if (siteInfo?.site_id && currentPoGroup[0]?.po_number) {
+    if (siteInfo?.site_id && selectedSite) {
       navigate(`/worksheets/${siteInfo.site_id}/${reportTypeId}`);
     } else {
       showAlert("error", "Site information not available");
     }
   };
 
-  const currentPoGroup = poGroups[currentPage - 1] || [];
+  const currentPoGroup = poGroups.find(
+    (group) => group[0]?.po_number === selectedSite
+  ) || [];
+
+  const filteredSiteOptions = siteOptions.filter(
+    (option) =>
+      option.site_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      option.po_number.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow-lg border border-gray-200">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       {alert.message && (
         <div
-          className={`mb-4 p-3 rounded-lg shadow-sm ${
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
             alert.type === "error"
-              ? "bg-red-50 text-red-800 border-l-4 border-red-500"
-              : alert.type === "success"
-              ? "bg-green-50 text-green-800 border-l-4 border-green-500"
-              : "bg-yellow-50 text-yellow-800 border-l-4 border-yellow-500"
+              ? "bg-red-100 text-red-800 border-l-4 border-red-500"
+              : "bg-green-100 text-green-800 border-l-4 border-green-500"
           }`}
         >
           <div className="flex items-center">
             {alert.type === "error" ? (
               <AlertCircle className="w-5 h-5 mr-2" />
-            ) : alert.type === "success" ? (
-              <CheckCircle className="w-5 h-5 mr-2" />
             ) : (
-              <AlertCircle className="w-5 h-5 mr-2" />
+              <CheckCircle className="w-5 h-5 mr-2" />
             )}
-            {alert.message}
+            <span className="text-sm">{alert.message}</span>
           </div>
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-        {/* Site information display */}
-        {siteInfo && !loadingSite && (
-          <div className="flex items-center bg-white px-4 py-3 rounded-lg shadow border border-gray-200 w-full sm:w-auto">
-            <MapPin className="w-5 h-5 text-indigo-600 mr-2" />
-            <div className="flex-1">
-              <div className="font-medium text-gray-800 text-sm sm:text-base">
-                {siteInfo.site_name}
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+            Project Reckoner
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Manage and track project progress with ease
+          </p>
+        </div>
+
+        {/* Improved Site Selection Dropdown */}
+        <div className="mb-8" ref={dropdownRef}>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Select Site
+          </label>
+          <div className="relative max-w-md">
+            {dropdownOpen ? (
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                <div className="flex items-center px-3 py-2 border-b border-gray-200">
+                  <Search className="h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    placeholder="Search sites..."
+                    className="flex-1 py-2 px-3 text-sm focus:outline-none"
+                  />
+                  <button
+                    onClick={() => setDropdownOpen(false)}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {loadingSites ? (
+                    <div className="px-4 py-3 text-gray-500 text-sm flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mr-2"></div>
+                      Loading sites...
+                    </div>
+                  ) : filteredSiteOptions.length === 0 ? (
+                    <div className="px-4 py-3 text-gray-500 text-sm">
+                      No matching sites found
+                    </div>
+                  ) : (
+                    filteredSiteOptions.map((option) => (
+                      <div
+                        key={option.po_number}
+                        onClick={() => handleSiteSelect(option.po_number)}
+                        className={`px-4 py-3 text-sm cursor-pointer hover:bg-indigo-50 transition-colors ${
+                          selectedSite === option.po_number
+                            ? "bg-indigo-100 text-indigo-800"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <div className="font-medium">{option.site_name}</div>
+                        <div className="text-xs text-gray-500">
+                          PO: {option.po_number}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-              <div className="text-xs text-gray-500">
-                PO: {currentPoGroup[0]?.po_number || 'N/A'}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {loadingSite && (
-          <div className="flex items-center bg-white px-4 py-3 rounded-lg shadow border border-gray-200 w-full sm:w-auto">
-            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-            <span className="text-sm text-gray-600">Loading site...</span>
-          </div>
-        )}
-
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm ${
-              currentPage === 1
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
-          >
-            Prev
-          </button>
-
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm ${
-              currentPage === totalPages
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      </div>
-
-      {/* Report buttons container */}
-      {(siteInfo || loadingSite) && (
-        <div className="flex flex-col sm:flex-row justify-center gap-2 mb-4">
-          <button
-            onClick={() => handleReportRedirect(1)}
-            disabled={loadingSite || !siteInfo?.site_id}
-            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${
-              loadingSite || !siteInfo?.site_id
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-teal-600 hover:bg-teal-700"
-            }`}
-          >
-            VIEW SITE PROGRESS REPORT
-          </button>
-          <button
-            onClick={() => handleReportRedirect(2)}
-            disabled={loadingSite || !siteInfo?.site_id}
-            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${
-              loadingSite || !siteInfo?.site_id
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-purple-600 hover:bg-purple-700"
-            }`}
-          >
-            VIEW MATERIAL DISPATCH REPORT 
-          </button>
-          <button
-            onClick={() => handleReportRedirect(3)}
-            disabled={loadingSite || !siteInfo?.site_id}
-            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${
-              loadingSite || !siteInfo?.site_id
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-orange-600 hover:bg-orange-700"
-            }`}
-          >
-            VIEW Material Usage Report
-          </button>
-        </div>
-      )}
-
-      {/* Pagination info */}
-      {totalPages > 0 && (
-        <div className="mb-4 text-center">
-          <div className="inline-block bg-indigo-100 text-indigo-800 text-xs sm:text-sm px-3 py-1 rounded-full font-medium">
-            Showing {currentPage} of {totalPages} PO groups
+            ) : (
+              <button
+                onClick={() => setDropdownOpen(true)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm text-left hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              >
+                <div>
+                  {selectedSite ? (
+                    <>
+                      <div className="font-medium text-gray-900">
+                        {
+                          siteOptions.find((opt) => opt.po_number === selectedSite)
+                            ?.site_name
+                        }
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        PO: {selectedSite}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="text-gray-500">Select a site...</span>
+                  )}
+                </div>
+                <ChevronDown className="h-5 w-5 text-gray-400" />
+              </button>
+            )}
           </div>
         </div>
-      )}
 
-      {loading ? (
-        <div className="flex justify-center items-center py-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        {/* Report Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          {[
+            {
+              label: "Site Progress",
+              icon: FileText,
+              color: "from-teal-500 to-teal-600",
+              reportId: 1,
+            },
+            {
+              label: "Material Dispatch",
+              icon: Receipt,
+              color: "from-purple-500 to-purple-600",
+              reportId: 2,
+            },
+            {
+              label: "Material Usage",
+              icon: BrickWall,
+              color: "from-orange-500 to-orange-600",
+              reportId: 3,
+            },
+          ].map((button) => (
+            <button
+              key={button.label}
+              onClick={() => handleReportRedirect(button.reportId)}
+              disabled={loadingSite || !siteInfo?.site_id}
+              className={`flex items-center justify-center px-4 py-3 rounded-lg shadow-md text-white bg-gradient-to-r ${button.color} hover:opacity-90 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200`}
+            >
+              <button.icon className="mr-2 h-5 w-5" />
+              <span className="text-sm font-medium">{button.label}</span>
+            </button>
+          ))}
         </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+
+        {/* Data Table */}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto bg-white rounded-lg shadow-md border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-indigo-600 to-indigo-800">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    PO Number
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    Item
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    PO Details
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    Completion
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    Billing
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                    Action
-                  </th>
+                  {[
+                    "PO Number",
+                    "Item",
+                    "Description",
+                    "PO Details",
+                    "Completion",
+                    "Billing",
+                    "Status",
+                    "Action",
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                    >
+                      {header}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentPoGroup.map((r) => (
-                  <tr key={r.rec_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr key={r.rec_id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {r.po_number}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {r.item_id}
-                      </div>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{r.item_id}</div>
                       <div className="text-xs text-gray-500">
                         {r.category_name} / {r.subcategory_name}
                       </div>
                     </td>
-                    <td className="px-4 py-3 max-w-xs">
+                    <td className="px-4 py-4 max-w-xs">
                       <div className="flex items-center text-sm text-gray-900">
-                        <FileText className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                        <FileText className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                         <span className="truncate">{r.work_descriptions}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 space-y-1">
+                    <td className="px-4 py-4 space-y-2">
                       <div className="flex items-center text-sm text-gray-900">
-                        <BrickWall className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                        <BrickWall className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                         Qty: {r.po_quantity} {r.uom}
                       </div>
                       <div className="flex items-center text-sm text-gray-900">
-                        <IndianRupee className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                        <IndianRupee className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                         Rate: {r.rate}
                       </div>
                       <div className="flex items-center text-sm text-gray-900">
-                        <TrendingUp className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                        <TrendingUp className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                         Value: {r.value}
                       </div>
                     </td>
-                    <td className="px-4 py-3 space-y-1">
+                    <td className="px-4 py-4 space-y-2">
                       {editingId === r.rec_id ? (
                         <>
-                          <input
-                            type="text"
-                            value={editingData.area_completed}
-                            onChange={(e) =>
-                              handleEditChange("area_completed", e.target.value)
-                            }
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Area Completed"
-                          />
-                          <input
-                            type="text"
-                            value={editingData.rate}
-                            onChange={(e) =>
-                              handleEditChange("rate", e.target.value)
-                            }
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Rate"
-                          />
-                          <input
-                            type="text"
-                            value={editingData.value}
-                            onChange={(e) =>
-                              handleEditChange("value", e.target.value)
-                            }
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Value"
-                          />
+                          {[
+                            { field: "area_completed", placeholder: "Area Completed" },
+                            { field: "rate", placeholder: "Rate" },
+                            { field: "value", placeholder: "Value" },
+                          ].map(({ field, placeholder }) => (
+                            <input
+                              key={field}
+                              type="text"
+                              value={editingData[field]}
+                              onChange={(e) => handleEditChange(field, e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder={placeholder}
+                            />
+                          ))}
                         </>
                       ) : (
                         <>
                           <div className="flex items-center text-sm text-gray-900">
-                            <Hexagon className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                            <Hexagon className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                             Area: {r.area_completed}
                           </div>
                           <div className="flex items-center text-sm text-gray-900">
-                            <Percent className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                            <Percent className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                             Rate: {r.completion_rate}
                           </div>
                           <div className="flex items-center text-sm text-gray-900">
-                            <IndianRupee className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                            <IndianRupee className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                             Value: {r.completion_value}
                           </div>
                         </>
                       )}
                     </td>
-                    <td className="px-4 py-3 space-y-1">
+                    <td className="px-4 py-4 space-y-2">
                       {editingId === r.rec_id ? (
                         <>
-                          <input
-                            type="text"
-                            value={editingData.billed_area}
-                            onChange={(e) =>
-                              handleEditChange("billed_area", e.target.value)
-                            }
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Billed Area"
-                          />
-                          <input
-                            type="text"
-                            value={editingData.billed_value}
-                            onChange={(e) =>
-                              handleEditChange("billed_value", e.target.value)
-                            }
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Billed Value"
-                          />
-                          <input
-                            type="text"
-                            value={editingData.balance_area}
-                            onChange={(e) =>
-                              handleEditChange("balance_area", e.target.value)
-                            }
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Balance Area"
-                          />
-                          <input
-                            type="text"
-                            value={editingData.balance_value}
-                            onChange={(e) =>
-                              handleEditChange("balance_value", e.target.value)
-                            }
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Balance Value"
-                          />
+                          {[
+                            { field: "billed_area", placeholder: "Billed Area" },
+                            { field: "billed_value", placeholder: "Billed Value" },
+                            { field: "balance_area", placeholder: "Balance Area" },
+                            { field: "balance_value", placeholder: "Balance Value" },
+                          ].map(({ field, placeholder }) => (
+                            <input
+                              key={field}
+                              type="text"
+                              value={editingData[field]}
+                              onChange={(e) => handleEditChange(field, e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder={placeholder}
+                            />
+                          ))}
                         </>
                       ) : (
                         <>
                           <div className="flex items-center text-sm text-gray-900">
-                            <ReceiptText className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                            <ReceiptText className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                             Billed: {r.billed_area}
                           </div>
                           <div className="flex items-center text-sm text-gray-900">
-                            <IndianRupee className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                            <IndianRupee className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                             Value: {r.billed_value}
                           </div>
                           <div className="flex items-center text-sm text-gray-900">
-                            <Grid2x2Check className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                            <Grid2x2Check className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                             Balance: {r.balance_area}
                           </div>
                           <div className="flex items-center text-sm text-gray-900">
-                            <IndianRupee className="flex-shrink-0 mr-1.5 h-4 w-4 text-indigo-600" />
+                            <IndianRupee className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
                             Value: {r.balance_value}
                           </div>
                         </>
                       )}
                     </td>
-                    <td className="px-4 py-3 space-y-2">
+                    <td className="px-4 py-4 space-y-2">
                       {editingId === r.rec_id ? (
                         <>
                           <select
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             value={editingData.work_status}
-                            onChange={(e) =>
-                              handleEditChange("work_status", e.target.value)
-                            }
+                            onChange={(e) => handleEditChange("work_status", e.target.value)}
                           >
                             <option value="In Progress">In Progress</option>
                             <option value="Completed">Completed</option>
                             <option value="Pending">Pending</option>
                           </select>
                           <select
-                            className="w-full p-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             value={editingData.billing_status}
-                            onChange={(e) =>
-                              handleEditChange("billing_status", e.target.value)
-                            }
+                            onChange={(e) => handleEditChange("billing_status", e.target.value)}
                           >
                             <option value="Billed">Billed</option>
                             <option value="Not Billed">Not Billed</option>
-                            <option value="Partially Billed">
-                              Partially Billed
-                            </option>
+                            <option value="Partially Billed">Partially Billed</option>
                           </select>
                         </>
                       ) : (
@@ -549,29 +576,29 @@ const DisplayReckoner = () => {
                         </>
                       )}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {editingId === r.rec_id ? (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 justify-end">
                           <button
                             onClick={() => handleSubmit(r.rec_id)}
                             disabled={submitting}
-                            className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                           >
-                            <Save className="-ml-0.5 mr-1 h-3 w-3" /> Save
+                            <Save className="mr-2 h-4 w-4" /> Save
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                           >
-                            <X className="-ml-0.5 mr-1 h-3 w-3" /> Cancel
+                            <X className="mr-2 h-4 w-4" /> Cancel
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => handleEdit(r)}
-                          className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          <Edit className="-ml-0.5 mr-1 h-3 w-3" /> Edit
+                          <Edit className="mr-2 h-4 w-4" /> Edit
                         </button>
                       )}
                     </td>
@@ -580,8 +607,8 @@ const DisplayReckoner = () => {
               </tbody>
             </table>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };

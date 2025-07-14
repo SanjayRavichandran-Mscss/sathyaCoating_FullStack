@@ -873,3 +873,14 @@ exports.checkPoReckoner = async (req, res) => {
     }
   }
 };
+
+
+
+exports.getAllSites = async (req, res) => {
+  try {
+    const sites = await reckonerModel.fetchAllSites();
+    successResponse(res, sites, "Sites fetched successfully");
+  } catch (error) {
+    errorResponse(res, "Error fetching sites", 500, error);
+  }
+};
