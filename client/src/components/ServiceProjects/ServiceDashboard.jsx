@@ -1,4 +1,3 @@
-
 // import { useState, useEffect } from "react";
 // import axios from "axios";
 // import { useLocation } from "react-router-dom";
@@ -99,7 +98,7 @@
 
 //     if (error) {
 //       return (
-//         <div className="p-8 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-lg animate-fade-in">
+//         <div className="p-8 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-lg animate-pulse">
 //           {error}
 //         </div>
 //       );
@@ -127,25 +126,25 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen flex bg-gradient-to-br from-gray-100 to-indigo-100">
+//     <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-indigo-50">
 //       <ServiceMenu onMenuSelect={handleMenuSelect} activeMenu={activeView} />
 
 //       <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto transition-all duration-300">
-//         <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-7xl mx-auto border border-gray-200/50 backdrop-blur-md bg-opacity-95">
+//         <div className="bg-white/90 rounded-2xl shadow-2xl p-6 sm:p-8 max-w-7xl mx-auto border border-indigo-200/50 backdrop-blur-lg">
 //           {renderActiveView()}
 //         </div>
 //       </div>
 
 //       {showCompanyModal && (
 //         <div
-//           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in"
+//           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in"
 //           onClick={() => setShowCompanyModal(false)}
 //           role="dialog"
 //           aria-modal="true"
 //           aria-label="Create Company Modal"
 //         >
 //           <div
-//             className="w-full max-w-md sm:max-w-lg transform transition-all duration-500 animate-slide-in-right"
+//             className="w-full max-w-md sm:max-w-lg transform transition-all duration-500 animate-slide-in-up bg-white rounded-xl shadow-2xl"
 //             onClick={(e) => e.stopPropagation()}
 //           >
 //             <CompanyCreation onCompanyCreated={handleCompanyCreated} />
@@ -155,14 +154,14 @@
 
 //       {showProjectModal && (
 //         <div
-//           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in"
+//           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in"
 //           onClick={() => setShowProjectModal(false)}
 //           role="dialog"
 //           aria-modal="true"
 //           aria-label="Create Project Modal"
 //         >
 //           <div
-//             className="w-full max-w-md sm:max-w-lg transform transition-all duration-500 animate-slide-in-right"
+//             className="w-full max-w-md sm:max-w-lg transform transition-all duration-500 animate-slide-in-up bg-white rounded-xl shadow-2xl"
 //             onClick={(e) => e.stopPropagation()}
 //           >
 //             <ProjectCreation
@@ -178,11 +177,6 @@
 // };
 
 // export default ServiceDashboard;
-
-
-
-
-
 
 
 
@@ -285,15 +279,15 @@ const ServiceDashboard = () => {
   const renderActiveView = () => {
     if (loading) {
       return (
-        <div className="flex justify-center items-center h-full">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
+        <div className="flex justify-center items-center h-full min-h-[50vh]">
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-t-4 border-b-4 border-indigo-600"></div>
         </div>
       );
     }
 
     if (error) {
       return (
-        <div className="p-8 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-lg animate-pulse">
+        <div className="p-4 sm:p-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm sm:text-base animate-pulse">
           {error}
         </div>
       );
@@ -321,42 +315,42 @@ const ServiceDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-indigo-50">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
       <ServiceMenu onMenuSelect={handleMenuSelect} activeMenu={activeView} />
 
-      <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto transition-all duration-300">
-        <div className="bg-white/90 rounded-2xl shadow-2xl p-6 sm:p-8 max-w-7xl mx-auto border border-indigo-200/50 backdrop-blur-lg">
+      <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 max-w-full mx-auto border border-gray-200">
           {renderActiveView()}
         </div>
       </div>
 
       {showCompanyModal && (
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in"
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-0 animate-fade-in"
           onClick={() => setShowCompanyModal(false)}
           role="dialog"
           aria-modal="true"
           aria-label="Create Company Modal"
         >
           <div
-            className="w-full max-w-md sm:max-w-lg transform transition-all duration-500 animate-slide-in-up bg-white rounded-xl shadow-2xl"
+            className="w-full max-w-[90%] sm:max-w-md md:max-w-lg transform transition-all duration-300 animate-slide-in-up bg-white rounded-xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <CompanyCreation onCompanyCreated={handleCompanyCreated} />
+            <CompanyCreation onCompanyCreated={handleCompanyCreated} onClose={() => setShowCompanyModal(false)} />
           </div>
         </div>
       )}
 
       {showProjectModal && (
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in"
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-0 animate-fade-in"
           onClick={() => setShowProjectModal(false)}
           role="dialog"
           aria-modal="true"
           aria-label="Create Project Modal"
         >
           <div
-            className="w-full max-w-md sm:max-w-lg transform transition-all duration-500 animate-slide-in-up bg-white rounded-xl shadow-2xl"
+            className="w-full max-w-[90%] sm:max-w-md md:max-w-lg transform transition-all duration-300 animate-slide-in-up bg-white rounded-xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <ProjectCreation

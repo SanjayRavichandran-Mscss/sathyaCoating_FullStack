@@ -391,3 +391,32 @@ exports.getAllProjectsWithSites = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 };
+
+
+
+exports.createProject = async (req, res) => {
+  try {
+    const { company_id, project_name } = req.body;
+
+    if (!company_id || !project_name) {
+      return res.status(400).json({ error: "Company ID and project name are required" });
+    }
+
+    // Verify company exists
+    const company = await projectModel.fetchCompanyById(company_id);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    const newProject = await projectModel.createProject(company_id, project_name);
+
+    res.status(201).json({
+      message: "Project created successfully",
+      project_id: newProject.project_id,
+      project_name: newProject.project_name,
+    });
+  } catch (error) {
+    console.error("Error creating project:", error);
+    res.status(500).json({ error: "Failed to create project", details: error.message });
+  }
+};

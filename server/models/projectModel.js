@@ -363,3 +363,20 @@ exports.getAllProjectsWithSites = async () => {
   `);
   return rows;
 };
+
+
+
+
+
+exports.createProject = async (company_id, project_name) => {
+  try {
+    const project_type_id = "PT001"; // Default project_type_id as specified
+    const project_id = await exports.generateNewProjectId();
+    
+    await exports.insertProject(project_id, project_type_id, company_id, project_name);
+    
+    return { project_id, project_name };
+  } catch (error) {
+    throw new Error("Failed to create project: " + error.message);
+  }
+};

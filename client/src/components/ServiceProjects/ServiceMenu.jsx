@@ -1,109 +1,3 @@
-// import React, { useState } from "react";
-// import {
-//   Calculator,
-//   ClipboardList,
-//   Building2,
-//   ListTree,
-//   SquareMenu,
-//   X,
-//   LayoutDashboard,
-// } from "lucide-react";
-
-// const ServiceMenu = ({ onMenuSelect, activeMenu }) => {
-//   const [isExpanded, setIsExpanded] = useState(false);
-//   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-//   const menuItems = [
-//     {
-//       id: "createReckoner",
-//       label: "Create Reckoner",
-//       icon: <Calculator size={24} />,
-//       active: activeMenu === "createReckoner",
-//     },
-//     {
-//       id: "displayReckoner",
-//       label: "View Reckoners",
-//       icon: <ClipboardList size={24} />,
-//       active: activeMenu === "displayReckoner",
-//     },
-//     {
-//       id: "viewCompanies",
-//       label: "Manage Companies",
-//       icon: <Building2 size={24} />,
-//       active: activeMenu === "viewCompanies",
-//     },
-//     {
-//       id: "viewProjects",
-//       label: "Manage Projects",
-//       icon: <ListTree size={24} />,
-//       active: activeMenu === "viewProjects",
-//     },
-//   ];
-
-//   const handleMenuClick = (menuId) => {
-//     onMenuSelect(menuId);
-//     setIsMobileMenuOpen(false);
-//   };
-
-//   return (
-//     <div className="h-screen flex flex-col">
-//       <div className="md:hidden flex items-center justify-between p-4 bg-gradient-to-r from-indigo-700 to-blue-700 shadow-lg">
-//         <div className="flex items-center text-white">
-//           <LayoutDashboard className="mr-2" size={28} />
-//           <span className="font-semibold text-xl">Dashboard</span>
-//         </div>
-//         <button
-//           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-//           className="p-2 rounded-full text-white hover:bg-indigo-800 transition-all duration-200"
-//           aria-label={isMobileMenuOpen ? "Close Menu" : "Open Menu"}
-//         >
-//           {isMobileMenuOpen ? <X size={24} /> : <SquareMenu size={24} />}
-//         </button>
-//       </div>
-
-//       <div
-//         className={`h-full transition-all duration-300 flex flex-col bg-gradient-to-b from-indigo-700 to-blue-700 shadow-2xl
-//           ${isMobileMenuOpen ? "block absolute top-0 left-0 w-72 z-50" : "hidden md:flex"}
-//           ${isExpanded ? "w-72" : "w-20"}`}
-//         onMouseEnter={() => setIsExpanded(true)}
-//         onMouseLeave={() => setIsExpanded(false)}
-//       >
-//         <div className="p-5 flex items-center text-white border-b border-indigo-600/30">
-//           <LayoutDashboard size={30} className="mr-3" />
-//           {isExpanded && <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>}
-//         </div>
-
-//         <nav className="flex-1 pt-4 px-3 space-y-2">
-//           {menuItems.map((item) => (
-//             <button
-//               key={item.id}
-//               onClick={() => handleMenuClick(item.id)}
-//               className={`w-full flex items-center p-3 rounded-xl transition-all duration-200
-//                 ${item.active ? "bg-white/20 text-white shadow-lg" : "text-white/90 hover:bg-white/15 hover:text-white"}`}
-//               title={isExpanded ? "" : item.label}
-//             >
-//               <span className={`${item.active ? "text-white" : "text-white/90"}`}>{item.icon}</span>
-//               {isExpanded && (
-//                 <span className="ml-4 text-base font-medium tracking-wide">{item.label}</span>
-//               )}
-//             </button>
-//           ))}
-//         </nav>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ServiceMenu;
-
-
-
-
-
-
-
-
-
 import React, { useState } from "react";
 import {
   Calculator,
@@ -116,32 +10,31 @@ import {
 } from "lucide-react";
 
 const ServiceMenu = ({ onMenuSelect, activeMenu }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
     {
       id: "createReckoner",
       label: "Create Reckoner",
-      icon: <Calculator size={24} />,
+      icon: <Calculator size={20} />,
       active: activeMenu === "createReckoner",
     },
     {
       id: "displayReckoner",
       label: "View Reckoners",
-      icon: <ClipboardList size={24} />,
+      icon: <ClipboardList size={20} />,
       active: activeMenu === "displayReckoner",
     },
     {
       id: "viewCompanies",
       label: "Manage Companies",
-      icon: <Building2 size={24} />,
+      icon: <Building2 size={20} />,
       active: activeMenu === "viewCompanies",
     },
     {
       id: "viewProjects",
       label: "Manage Projects",
-      icon: <ListTree size={24} />,
+      icon: <ListTree size={20} />,
       active: activeMenu === "viewProjects",
     },
   ];
@@ -151,51 +44,87 @@ const ServiceMenu = ({ onMenuSelect, activeMenu }) => {
     setIsMobileMenuOpen(false);
   };
 
+  const handleOutsideClick = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <div className="h-screen flex flex-col relative">
+    <div className="flex flex-col md:w-64">
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-gradient-to-r from-indigo-700 to-blue-700 shadow-lg">
-        <div className="flex items-center text-white">
-          <LayoutDashboard className="mr-2" size={28} />
-          <span className="font-semibold text-xl tracking-tight">Dashboard</span>
+      <div className="flex md:hidden items-center justify-between p-3 sm:p-4 bg-white/80 backdrop-blur-md shadow-md">
+        <div className="flex items-center text-gray-800">
+          <LayoutDashboard className="mr-2" size={24} />
+          <span className="font-semibold text-lg sm:text-xl">Dashboard</span>
         </div>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-full text-white hover:bg-indigo-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="p-2 rounded-full hover:bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           aria-label={isMobileMenuOpen ? "Close Menu" : "Open Menu"}
         >
           {isMobileMenuOpen ? <X size={24} /> : <SquareMenu size={24} />}
         </button>
       </div>
 
-      {/* Sidebar */}
-      <div
-        className={`h-full transition-all duration-300 flex flex-col bg-gradient-to-b from-indigo-700 to-blue-700 shadow-2xl
-          ${isMobileMenuOpen ? "block absolute top-0 right-0 w-72 z-50" : "hidden md:flex"}
-          ${isExpanded ? "w-72" : "w-16"}`}
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
-      >
-        <div className="p-4 flex items-center text-white border-b border-indigo-600/30">
-          <LayoutDashboard size={28} className="mr-3" />
-          {isExpanded && <h2 className="text-xl font-bold tracking-tight">Dashboard</h2>}
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 md:hidden"
+          onClick={handleOutsideClick}
+        >
+          <div
+            className="w-72 max-h-[80vh] bg-white/90 backdrop-blur-lg shadow-xl rounded-r-xl p-4 flex flex-col animate-slide-in-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center text-gray-800">
+                <LayoutDashboard size={24} className="mr-2" />
+                <h2 className="text-lg sm:text-xl font-bold">Dashboard</h2>
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-full hover:bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                aria-label="Close Menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-gray-100">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleMenuClick(item.id)}
+                  className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2 text-sm sm:text-base
+                    ${item.active ? "bg-indigo-100 text-indigo-800 shadow-md" : "text-gray-800 hover:bg-indigo-50"}
+                    focus:outline-none focus:ring-2 focus:ring-indigo-400`}
+                  aria-label={item.label}
+                >
+                  <span className="flex-shrink-0">{item.icon}</span>
+                  <span className="ml-3 truncate">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
         </div>
+      )}
 
-        <nav className="flex-1 pt-4 px-2 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-indigo-800">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex flex-col w-64 h-screen bg-white/90 backdrop-blur-lg shadow-lg">
+        <div className="p-3 sm:p-4 flex items-center border-b border-gray-200">
+          <LayoutDashboard size={24} className="mr-2 text-gray-800" />
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800">Dashboard</h2>
+        </div>
+        <nav className="flex-1 p-2 sm:p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-gray-100">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => handleMenuClick(item.id)}
-              className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2
-                ${item.active ? "bg-white/20 text-white shadow-md" : "text-white/90 hover:bg-white/15 hover:text-white"}
+              className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2 text-sm sm:text-base
+                ${item.active ? "bg-indigo-100 text-indigo-800 shadow-md" : "text-gray-800 hover:bg-indigo-50"}
                 focus:outline-none focus:ring-2 focus:ring-indigo-400`}
-              title={isExpanded ? "" : item.label}
               aria-label={item.label}
             >
-              <span className={`${item.active ? "text-white" : "text-white/90"}`}>{item.icon}</span>
-              {isExpanded && (
-                <span className="ml-4 text-sm font-medium tracking-wide">{item.label}</span>
-              )}
+              <span className="flex-shrink-0">{item.icon}</span>
+              <span className="ml-3 truncate">{item.label}</span>
             </button>
           ))}
         </nav>

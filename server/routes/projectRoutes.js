@@ -15,4 +15,6 @@ router.get("/projects-with-sites", projectController.getAllProjectsWithSites);
 router.get("/projects-with-sites/:companyId", projectController.getAllProjectsWithSitesByCompanyId);
 
 router.get("/locations", projectController.getAllLocations);
+
+router.post("/create-project", projectController.createProject);
 module.exports = router;

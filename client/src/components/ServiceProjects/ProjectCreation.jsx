@@ -487,7 +487,7 @@ const ProjectCreation = ({ companyId, onClose, onProjectCreated }) => {
         <div className="flex items-center space-x-3">
           <FolderPlus className="text-indigo-600" size={28} />
           <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Create Project & Sites for {companyName || "Selected Company"}
+            Create Sites for {companyName || "Selected Company"}
           </h3>
         </div>
         <button
@@ -536,7 +536,7 @@ const ProjectCreation = ({ companyId, onClose, onProjectCreated }) => {
                   ))}
                 </select>
               )}
-              <button
+              {/* <button
                 type="button"
                 onClick={toggleNewProjectInput}
                 className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -544,7 +544,7 @@ const ProjectCreation = ({ companyId, onClose, onProjectCreated }) => {
                 title={isNewProject ? "Select existing project" : "Add new project"}
               >
                 <Plus size="20" className="text-indigo-600" />
-              </button>
+              </button> */}
             </div>
           </div>
           <div>
