@@ -422,7 +422,7 @@ const DisplayReckoner = () => {
               <thead className="bg-gradient-to-r from-indigo-600 to-indigo-800">
                 <tr>
                   {[
-                    "PO Number",
+                    // "PO Number",
                     "Item",
                     "Description",
                     "PO Details",
@@ -443,9 +443,9 @@ const DisplayReckoner = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentPoGroup.map((r) => (
                   <tr key={r.rec_id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {/* <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {r.po_number}
-                    </td>
+                    </td> */}
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{r.item_id}</div>
                       <div className="text-xs text-gray-500">
