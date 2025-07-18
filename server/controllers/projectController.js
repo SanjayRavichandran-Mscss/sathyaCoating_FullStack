@@ -136,20 +136,72 @@ exports.updateCompany = async (req, res) => {
 };
 
 
+
+// Fetch all reckoner types
+
+// Fetch all reckoner types
+exports.getReckonerTypes = async (req, res) => {
+  try {
+    const reckonerTypes = await projectModel.getReckonerTypes();
+    console.log("Fetched reckoner types:", reckonerTypes);
+    res.status(200).json(reckonerTypes);
+  } catch (error) {
+    console.error("Error fetching reckoner types:", error);
+    res.status(500).json({ error: "Failed to fetch reckoner types" });
+  }
+};
+
+// Fetch next PO number for reckoner type
+exports.getNextPoNumber = async (req, res) => {
+  try {
+    const { reckoner_type_id } = req.params;
+    console.log(`Received request for next PO number with reckoner_type_id: ${reckoner_type_id}`);
+    const nextPoNumber = await projectModel.getNextPoNumber(reckoner_type_id);
+    if (!nextPoNumber) {
+      console.error(`Failed to generate PO number for reckoner_type_id: ${reckoner_type_id}`);
+      return res.status(400).json({ error: "Invalid reckoner type or not applicable for auto-generation" });
+    }
+    res.status(200).json({ po_number: nextPoNumber });
+  } catch (error) {
+    console.error("Error in getNextPoNumber:", error);
+    res.status(500).json({ error: "Failed to fetch next PO number" });
+  }
+};
+
 exports.createProjectWithSite = async (req, res) => {
   try {
-    const { project_type, company_id, project_name, site_name, po_number, start_date, end_date, incharge_type, location_id, new_location_name } = req.body;
+    const { 
+      project_type, 
+      company_id, 
+      project_name, 
+      site_name, 
+      po_number, 
+      start_date, 
+      end_date, 
+      incharge_type, 
+      location_id, 
+      new_location_name,
+      reckoner_type_id 
+    } = req.body;
 
-    if (!project_type || !company_id || !project_name || !site_name || !po_number || !start_date || !end_date || !incharge_type || (!location_id && !new_location_name)) {
-      return res.status(400).json({ error: "All fields are required, including either location_id or new_location_name" });
+    console.log("Received createProjectWithSite request:", req.body);
+
+    // Validate required fields
+    if (!project_type || !company_id || !project_name || !site_name || 
+        !po_number || !start_date || !end_date || 
+        !incharge_type || (!location_id && !new_location_name) || !reckoner_type_id) {
+      console.error("Validation failed: Missing required fields");
+      return res.status(400).json({ error: "All fields are required, including either location_id or new_location_name and reckoner_type_id" });
     }
 
     if (project_type !== "service") {
+      console.error(`Invalid project type: ${project_type}`);
       return res.status(400).json({ error: "Project type must be 'service'" });
     }
 
     const project_type_id = await projectModel.getProjectTypeId(project_type);
     if (!project_type_id) {
+      console.error(`Invalid project type ID for: ${project_type}`);
       return res.status(400).json({ error: "Invalid project type" });
     }
 
@@ -165,6 +217,7 @@ exports.createProjectWithSite = async (req, res) => {
     }
 
     if (!finalLocationId) {
+      console.error("No location ID provided or generated");
       return res.status(400).json({ error: "Location ID is required" });
     }
 
@@ -180,12 +233,34 @@ exports.createProjectWithSite = async (req, res) => {
 
     const incharge_id = await projectModel.getInchargeId(incharge_type);
     if (!incharge_id) {
+      console.error(`Invalid incharge type: ${incharge_type}`);
       return res.status(400).json({ error: "Invalid incharge type" });
     }
 
     const site_id = await projectModel.generateNewSiteId();
 
-    await projectModel.insertSite(site_id, site_name, po_number, start_date, end_date, incharge_id, null, project_id, finalLocationId);
+    // Validate reckoner_type_id
+    const [reckonerType] = await projectModel.db.query(
+      'SELECT type_id FROM reckoner_types WHERE type_id = ?',
+      [reckoner_type_id]
+    );
+    if (!reckonerType.length) {
+      console.error(`Invalid reckoner type ID: ${reckoner_type_id}`);
+      return res.status(400).json({ error: "Invalid reckoner type" });
+    }
+
+    await projectModel.insertSite(
+      site_id, 
+      site_name, 
+      po_number, 
+      start_date, 
+      end_date, 
+      incharge_id, 
+      null, 
+      project_id, 
+      finalLocationId,
+      reckoner_type_id
+    );
 
     res.status(201).json({ message: "Project and Site created successfully", project_id, site_id });
   } catch (error) {
@@ -193,7 +268,6 @@ exports.createProjectWithSite = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 exports.fetchWorkforceTypes = async (req, res) => {
     try {
         const workforceTypes = await projectModel.getWorkforceTypes();

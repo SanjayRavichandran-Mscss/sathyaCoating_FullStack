@@ -76,7 +76,7 @@ CREATE TABLE `completion_status` (
 
 LOCK TABLES `completion_status` WRITE;
 /*!40000 ALTER TABLE `completion_status` DISABLE KEYS */;
-INSERT INTO `completion_status` VALUES (1,2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(2,3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(3,4,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(4,5,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(5,6,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(6,7,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(7,8,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(8,9,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(9,10,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(10,11,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(11,12,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(12,13,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(13,14,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(14,15,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(15,16,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(16,17,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(17,18,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(18,19,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(19,20,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `completion_status` VALUES (1,2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(2,3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(3,4,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(4,5,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(5,6,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(6,7,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(7,8,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(8,9,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(9,10,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(10,11,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(11,12,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(12,13,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(13,14,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(14,15,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(15,16,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(16,17,20,2,40,NULL,NULL,NULL,NULL,NULL,NULL),(17,18,60,1,60,NULL,NULL,NULL,NULL,'Pending','Not Billed'),(18,19,50,2,10,NULL,NULL,NULL,NULL,NULL,NULL),(19,20,50,2,100,NULL,NULL,NULL,NULL,'Completed','Not Billed');
 /*!40000 ALTER TABLE `completion_status` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -327,6 +327,30 @@ INSERT INTO `project_type` VALUES ('PT001','service'),('PT002','supply');
 UNLOCK TABLES;
 
 --
+-- Table structure for table `reckoner_types`
+--
+
+DROP TABLE IF EXISTS `reckoner_types`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `reckoner_types` (
+  `type_id` int NOT NULL AUTO_INCREMENT,
+  `type_name` varchar(50) NOT NULL,
+  PRIMARY KEY (`type_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reckoner_types`
+--
+
+LOCK TABLES `reckoner_types` WRITE;
+/*!40000 ALTER TABLE `reckoner_types` DISABLE KEYS */;
+INSERT INTO `reckoner_types` VALUES (1,'Sample'),(2,'Approved'),(3,'Not Approved');
+/*!40000 ALTER TABLE `reckoner_types` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `report_master`
 --
 
@@ -378,6 +402,30 @@ INSERT INTO `report_type` VALUES (1,'SPR'),(2,'MDR'),(3,'MUR');
 UNLOCK TABLES;
 
 --
+-- Table structure for table `roles`
+--
+
+DROP TABLE IF EXISTS `roles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `roles` (
+  `role_id` int NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(50) NOT NULL,
+  PRIMARY KEY (`role_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `roles`
+--
+
+LOCK TABLES `roles` WRITE;
+/*!40000 ALTER TABLE `roles` DISABLE KEYS */;
+INSERT INTO `roles` VALUES (1,'superadmin'),(2,'admin'),(3,'site incharge'),(4,'accounts_team');
+/*!40000 ALTER TABLE `roles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `site_details`
 --
 
@@ -394,13 +442,16 @@ CREATE TABLE `site_details` (
   `workforce_id` varchar(30) DEFAULT NULL,
   `pd_id` varchar(30) NOT NULL,
   `location_id` varchar(10) DEFAULT NULL,
+  `reckoner_type_id` int DEFAULT NULL,
   PRIMARY KEY (`site_id`),
   KEY `fk_incharge_type` (`incharge_id`),
   KEY `fk_workforce_type` (`workforce_id`),
   KEY `fk_pd_id` (`pd_id`),
   KEY `fk_site_details_location` (`location_id`),
+  KEY `fk_reckoner_type_id` (`reckoner_type_id`),
   CONSTRAINT `fk_incharge_type` FOREIGN KEY (`incharge_id`) REFERENCES `site_incharge` (`incharge_id`),
   CONSTRAINT `fk_pd_id` FOREIGN KEY (`pd_id`) REFERENCES `project_details` (`pd_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_reckoner_type_id` FOREIGN KEY (`reckoner_type_id`) REFERENCES `reckoner_types` (`type_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_site_details_location` FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`),
   CONSTRAINT `fk_workforce_type` FOREIGN KEY (`workforce_id`) REFERENCES `workforce_type` (`workforce_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -412,7 +463,7 @@ CREATE TABLE `site_details` (
 
 LOCK TABLES `site_details` WRITE;
 /*!40000 ALTER TABLE `site_details` DISABLE KEYS */;
-INSERT INTO `site_details` VALUES ('ST001','CSL Berigai-block A','PO 6900002908','2025-03-01','2025-03-31','SI003',NULL,'PD001','LO006');
+INSERT INTO `site_details` VALUES ('ST001','CSL Berigai-block A','PO 6900002908','2025-03-01','2025-03-31','SI003',NULL,'PD001','LO006',NULL);
 /*!40000 ALTER TABLE `site_details` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -515,6 +566,37 @@ INSERT INTO `structural_painting` VALUES (1,1,1,NULL,NULL,NULL,NULL,NULL,NULL,NU
 UNLOCK TABLES;
 
 --
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `user_name` varchar(100) NOT NULL,
+  `user_email` varchar(100) NOT NULL,
+  `user_password` varchar(255) NOT NULL,
+  `role_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `user_email` (`user_email`),
+  KEY `role_id` (`role_id`),
+  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'superadmin','superadmin@gmail.com','12345678',1,'2025-07-18 04:46:28'),(2,'admin','admin@gmail.com','12345678',2,'2025-07-18 04:46:28'),(3,'siteincharge','siteincharge@gmail.com','12345678',3,'2025-07-18 04:46:28'),(4,'accountant','accountant@gmail.com','12345678',4,'2025-07-18 04:46:28');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `work_descriptions`
 --
 
@@ -572,4 +654,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-17 14:32:48
+-- Dump completed on 2025-07-18 16:04:15

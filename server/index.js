@@ -5,7 +5,7 @@ const db = require("./config/db");
 const projectRoutes = require("./routes/projectRoutes");
 const reckonerRoutes = require("./routes/reckonerRoutes");
 const sheetRoutes = require("./routes/sheetRoutes");
-
+const authRoutes = require("./routes/authRoute")
 const app = express();
 
 // Middleware
@@ -27,6 +27,7 @@ const startServer = async () => {
         await db.query("SELECT 1");
         console.log("Database connected successfully");
         
+        app.use("/auth",authRoutes)
         app.use("/project", projectRoutes);
         app.use("/reckoner",reckonerRoutes);
         app.use("/sheet",sheetRoutes);

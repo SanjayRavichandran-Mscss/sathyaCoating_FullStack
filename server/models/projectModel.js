@@ -37,25 +37,6 @@ exports.generateNewCompanyId = async () => {
   return "CO001";
 };
 
-// with location
-// exports.insertCompany = async (
-//   company_id,
-//   company_name,
-//   address,
-//   location_id,
-//   spoc_name,
-//   spoc_contact_no
-// ) => {
-//   await db.query(
-//     "INSERT INTO company (company_id, company_name, address, location_id, spoc_name, spoc_contact_no) VALUES (?, ?, ?, ?, ?, ?)",
-//     [company_id, company_name, address, location_id, spoc_name, spoc_contact_no]
-//   );
-// };
-
-
-
-// without location
-
 exports.insertCompany = async (
   company_id,
   company_name,
@@ -81,24 +62,13 @@ exports.fetchCompanyById = async (company_id) => {
   );
   return rows.length ? rows[0] : null;
 };
+
 exports.fetchAllCompanies = async () => {
   const [rows] = await db.query(`
         SELECT company_id, company_name, address, spoc_name, spoc_contact_no 
         FROM company
     `);
   return rows;
-};
-
-exports.fetchCompanyById = async (company_id) => {
-  const [rows] = await db.query(
-    `
-        SELECT company_id, company_name, address, spoc_name, spoc_contact_no 
-        FROM company
-        WHERE company_id = ?
-    `,
-    [company_id]
-  );
-  return rows.length ? rows[0] : null;
 };
 
 exports.fetchProjectsByCompanyId = async (company_id) => {
@@ -114,8 +84,6 @@ exports.fetchProjectsByCompanyId = async (company_id) => {
   return rows;
 };
 
-
-
 exports.updateCompany = async (
   company_id,
   company_name,
@@ -130,16 +98,6 @@ exports.updateCompany = async (
   );
 };
 
-exports.generateNewCompanyId = async () => {
-  const [rows] = await db.query(
-    "SELECT MAX(company_id) AS lastId FROM company"
-  );
-  if (rows[0].lastId) {
-    let lastNum = parseInt(rows[0].lastId.replace("CO", "")) + 1;
-    return `CO${String(lastNum).padStart(3, "0")}`;
-  }
-  return "CO001";
-};
 exports.getProjectTypeId = async (project_type) => {
   const [rows] = await db.query(
     "SELECT type_id FROM project_type WHERE LOWER(type_description) = ?",
@@ -167,7 +125,6 @@ exports.generateNewProjectId = async () => {
   return "PD001";
 };
 
-
 exports.insertProject = async (
   project_id,
   project_type_id,
@@ -179,6 +136,7 @@ exports.insertProject = async (
     [project_id, project_type_id, company_id, project_name]
   );
 };
+
 exports.getInchargeId = async (incharge_type) => {
   const [rows] = await db.query(
     "SELECT incharge_id FROM site_incharge WHERE incharge_type = ?",
@@ -215,10 +173,11 @@ exports.insertSite = async (
   incharge_id,
   workforce_id,
   pd_id,
-  location_id // Added location_id
+  location_id,
+  reckoner_type_id
 ) => {
   await db.query(
-    "INSERT INTO site_details (site_id, site_name, po_number, start_date, end_date, incharge_id, workforce_id, pd_id, location_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO site_details (site_id, site_name, po_number, start_date, end_date, incharge_id, workforce_id, pd_id, location_id, reckoner_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       site_id,
       site_name,
@@ -228,7 +187,8 @@ exports.insertSite = async (
       incharge_id,
       workforce_id,
       pd_id,
-      location_id
+      location_id,
+      reckoner_type_id
     ]
   );
 };
@@ -261,17 +221,20 @@ exports.getAllProjectsWithSites = async () => {
             sd.po_number,
             sd.start_date,
             sd.end_date,
-            si.incharge_type
+            si.incharge_type,
+            l.location_name
         FROM 
             project_details pd
         JOIN 
-            company c ON pd.companyyles_id = c.company_id
+            company c ON pd.company_id = c.company_id
         JOIN 
             project_type pt ON pd.project_type_id = pt.type_id
         LEFT JOIN 
             site_details sd ON pd.pd_id = sd.pd_id
         LEFT JOIN 
             site_incharge si ON sd.incharge_id = si.incharge_id
+        LEFT JOIN 
+            location l ON sd.location_id = l.location_id
         ORDER BY 
             pd.project_name, sd.site_name
     `);
@@ -324,7 +287,6 @@ exports.getProjectByNameAndType = async (project_name, project_type_id) => {
   return rows.length ? rows[0] : null;
 };
 
-
 exports.getAllLocations = async () => {
   const [rows] = await db.query(
     "SELECT location_id, location_name FROM location ORDER BY location_name"
@@ -332,41 +294,46 @@ exports.getAllLocations = async () => {
   return rows;
 };
 
-
-
-exports.getAllProjectsWithSites = async () => {
-  const [rows] = await db.query(`
-    SELECT 
-        pd.pd_id AS project_id,
-        pd.project_name,
-        pt.type_description AS project_type,
-        c.company_name,
-        c.company_id,
-        sd.site_id,
-        sd.site_name,
-        sd.po_number,
-        sd.start_date,
-        sd.end_date,
-        si.incharge_type
-    FROM 
-        project_details pd
-    JOIN 
-        company c ON pd.company_id = c.company_id
-    JOIN 
-        project_type pt ON pd.project_type_id = pt.type_id
-    LEFT JOIN 
-        site_details sd ON pd.pd_id = sd.pd_id
-    LEFT JOIN 
-        site_incharge si ON sd.incharge_id = si.incharge_id
-    ORDER BY 
-        pd.project_name, sd.site_name
-  `);
+exports.getReckonerTypes = async () => {
+  const [rows] = await db.query(
+    "SELECT type_id, type_name FROM reckoner_types ORDER BY type_name"
+  );
   return rows;
 };
 
-
-
-
+exports.getNextPoNumber = async (reckoner_type_id) => {
+  console.log(`Fetching next PO number for reckoner_type_id: ${reckoner_type_id}`);
+  const [reckonerType] = await db.query(
+    "SELECT type_name FROM reckoner_types WHERE type_id = ?",
+    [reckoner_type_id]
+  );
+  if (!reckonerType.length) {
+    console.error(`No reckoner type found for type_id: ${reckoner_type_id}`);
+    return null;
+  }
+  const type_name = reckonerType[0].type_name.toLowerCase();
+  console.log(`Reckoner type_name: ${type_name}`);
+  if (type_name !== 'sample' && type_name !== 'not_approved') {
+    console.error(`Reckoner type ${type_name} not applicable for auto-generation`);
+    return null;
+  }
+  const prefix = type_name === 'sample' ? 'SA' : 'NA';
+  const [rows] = await db.query(
+    `SELECT po_number FROM site_details 
+     WHERE po_number LIKE ? 
+     ORDER BY CAST(SUBSTRING(po_number, 3) AS UNSIGNED) DESC 
+     LIMIT 1`,
+    [`${prefix}%`]
+  );
+  if (!rows.length) {
+    console.log(`No existing ${prefix}-prefixed PO number found, starting with ${prefix}0000000001`);
+    return `${prefix}0000000001`;
+  }
+  const lastNumber = parseInt(rows[0].po_number.substring(2)) || 0;
+  const nextPoNumber = `${prefix}${String(lastNumber + 1).padStart(10, '0')}`;
+  console.log(`Generated next PO number: ${nextPoNumber}`);
+  return nextPoNumber;
+};
 
 exports.createProject = async (company_id, project_name) => {
   try {
