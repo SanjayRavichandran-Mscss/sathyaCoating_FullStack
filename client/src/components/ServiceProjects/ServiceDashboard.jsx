@@ -23,7 +23,7 @@
 //   const fetchCompanies = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await axios.get("http://localhost:5000/project/companies");
+//       const response = await axios.get("http://192.168.253.187:5000/project/companies");
 //       setCompanies(response.data || []);
 //     } catch (error) {
 //       console.error("Error fetching companies:", error);
@@ -212,7 +212,7 @@ const ServiceDashboard = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/project/companies");
+      const response = await axios.get("http://192.168.253.187:5000/project/companies");
       setCompanies(response.data || []);
     } catch (error) {
       console.error("Error fetching companies:", error);

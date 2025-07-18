@@ -67,7 +67,7 @@
 //   const fetchSites = async () => {
 //     try {
 //       setLoadingSites(true);
-//       const res = await axios.get("http://localhost:5000/reckoner/sites");
+//       const res = await axios.get("http://192.168.253.187:5000/reckoner/sites");
 //       if (res.data.success) {
 //         const options = res.data.data.map((site) => ({
 //           po_number: site.po_number,
@@ -108,7 +108,7 @@
 //     try {
 //       setLoadingSite(true);
 //       const res = await axios.get(
-//         `http://localhost:5000/reckoner/sites/${poNumber}`
+//         `http://192.168.253.187:5000/reckoner/sites/${poNumber}`
 //       );
 //       if (res.data.success) {
 //         setSiteInfo(res.data.data);
@@ -151,7 +151,7 @@
 //   const fetchReckonerData = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("http://localhost:5000/reckoner/reckoner/");
+//       const res = await axios.get("http://192.168.253.187:5000/reckoner/reckoner/");
 //       const data = res.data.success ? res.data.data : [];
 //       setReckonerData(data);
 //       setFilteredData(data);
@@ -203,7 +203,7 @@
 //     try {
 //       setSubmitting(true);
 //       await axios.patch(
-//         `http://localhost:5000/reckoner/completion_status/${rec_id}`,
+//         `http://192.168.253.187:5000/reckoner/completion_status/${rec_id}`,
 //         editingData
 //       );
 //       showAlert("success", "Data updated successfully");
@@ -728,7 +728,7 @@ const DisplayReckoner = () => {
   const fetchSites = async () => {
     try {
       setLoadingSites(true);
-      const res = await axios.get("http://localhost:5000/reckoner/sites");
+      const res = await axios.get("http://192.168.253.187:5000/reckoner/sites");
       if (res.data.success) {
         const options = res.data.data.map((site) => ({
           po_number: site.po_number,
@@ -769,7 +769,7 @@ const DisplayReckoner = () => {
     try {
       setLoadingSite(true);
       const res = await axios.get(
-        `http://localhost:5000/reckoner/sites/${poNumber}`
+        `http://192.168.253.187:5000/reckoner/sites/${poNumber}`
       );
       if (res.data.success) {
         setSiteInfo(res.data.data);
@@ -812,7 +812,7 @@ const DisplayReckoner = () => {
   const fetchReckonerData = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/reckoner/reckoner/");
+      const res = await axios.get("http://192.168.253.187:5000/reckoner/reckoner/");
       const data = res.data.success ? res.data.data : [];
       setReckonerData(data);
       setFilteredData(data);
@@ -864,7 +864,7 @@ const DisplayReckoner = () => {
     try {
       setSubmitting(true);
       await axios.patch(
-        `http://localhost:5000/reckoner/completion_status/${rec_id}`,
+        `http://192.168.253.187:5000/reckoner/completion_status/${rec_id}`,
         editingData
       );
       showAlert("success", "Data updated successfully");

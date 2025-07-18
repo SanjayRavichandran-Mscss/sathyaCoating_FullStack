@@ -20,7 +20,7 @@ const AdminDashboard = () => {
       }
 
       try {
-        const response = await axios.post("http://localhost:5000/auth/verify-token", { token });
+        const response = await axios.post("http://192.168.253.187:5000/auth/verify-token", { token });
         setUser(response.data);
       } catch (error) {
         console.error("Token verification failed:", error);
@@ -34,7 +34,7 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/auth/logout");
+      await axios.post("http://192.168.253.187:5000/auth/logout");
       localStorage.removeItem("token");
       localStorage.removeItem("encodedUserId");
       localStorage.removeItem("loginTime");
