@@ -77,7 +77,7 @@
 //       const fetchProjects = async () => {
 //         try {
 //           setLoading((prev) => ({ ...prev, projects: true }));
-//           const response = await axios.get(`http://192.168.253.187:5000/reckoner/projects/${selectedCompanyId}`);
+//           const response = await axios.get(`http://localhost:5000/reckoner/projects/${selectedCompanyId}`);
 //           setProjects(response.data.data || []);
 //           setSelectedProject("");
 //           setSites([]);
@@ -114,7 +114,7 @@
 //       const fetchSites = async () => {
 //         try {
 //           setLoading((prev) => ({ ...prev, sites: true }));
-//           const response = await axios.get(`http://192.168.253.187:5000/reckoner/sites-by-project/${selectedProject}`);
+//           const response = await axios.get(`http://localhost:5000/reckoner/sites-by-project/${selectedProject}`);
 //           setSites(response.data.data || []);
 //           setSelectedSite("");
 //           setFormData((prev) => ({ ...prev, poNumber: "", siteId: "" }));
@@ -159,15 +159,15 @@
 //     const fetchData = async () => {
 //       try {
 //         setLoading((prev) => ({ ...prev, categories: true }));
-//         const categoriesRes = await axios.get("http://192.168.253.187:5000/reckoner/categories");
+//         const categoriesRes = await axios.get("http://localhost:5000/reckoner/categories");
 //         setCategories(categoriesRes.data.data || []);
 
 //         setLoading((prev) => ({ ...prev, subcategories: true }));
-//         const subcategoriesRes = await axios.get("http://192.168.253.187:5000/reckoner/subcategories");
+//         const subcategoriesRes = await axios.get("http://localhost:5000/reckoner/subcategories");
 //         setSubcategories(subcategoriesRes.data.data || []);
 
 //         setLoading((prev) => ({ ...prev, workItems: true }));
-//         const workItemsRes = await axios.get("http://192.168.253.187:5000/reckoner/work-items");
+//         const workItemsRes = await axios.get("http://localhost:5000/reckoner/work-items");
 //         setWorkItems(workItemsRes.data.data || []);
 //       } catch (err) {
 //         Swal.fire({
@@ -424,7 +424,7 @@
 //   const processSite = async (poNumber) => {
 //     try {
 //       setLoading((prev) => ({ ...prev, processing: true }));
-//       await axios.get(`http://192.168.253.187:5000/sheet/process/${encodeURIComponent(poNumber)}`);
+//       await axios.get(`http://localhost:5000/sheet/process/${encodeURIComponent(poNumber)}`);
 //       return true;
 //     } catch (error) {
 //       console.error("Error processing site:", error);
@@ -484,7 +484,7 @@
 //         })),
 //       };
 
-//       await axios.post("http://192.168.253.187:5000/reckoner/reckoner", submissionData);
+//       await axios.post("http://localhost:5000/reckoner/reckoner", submissionData);
 //       await processSite(formData.poNumber);
 
 //       Swal.fire({
@@ -1008,16 +1008,10 @@
 
 
 
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 
 const getRandomColor = (index) => {
   const colors = [
@@ -1083,6 +1077,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
     submitting: false,
     processing: false,
   });
+  const [openCategories, setOpenCategories] = useState({ 0: true }); // First category open by default
 
   useEffect(() => {
     setSelectedCompanyId(selectedCompany || "");
@@ -1093,7 +1088,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
       const fetchProjects = async () => {
         try {
           setLoading((prev) => ({ ...prev, projects: true }));
-          const response = await axios.get(`http://192.168.253.187:5000/reckoner/projects/${selectedCompanyId}`);
+          const response = await axios.get(`http://localhost:5000/reckoner/projects/${selectedCompanyId}`);
           setProjects(response.data.data || []);
           setSelectedProject("");
           setSites([]);
@@ -1130,7 +1125,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
       const fetchSites = async () => {
         try {
           setLoading((prev) => ({ ...prev, sites: true }));
-          const response = await axios.get(`http://192.168.253.187:5000/reckoner/sites-by-project/${selectedProject}`);
+          const response = await axios.get(`http://localhost:5000/reckoner/sites-by-project/${selectedProject}`);
           setSites(response.data.data || []);
           setSelectedSite("");
           setFormData((prev) => ({ ...prev, poNumber: "", siteId: "" }));
@@ -1175,15 +1170,15 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
     const fetchData = async () => {
       try {
         setLoading((prev) => ({ ...prev, categories: true }));
-        const categoriesRes = await axios.get("http://192.168.253.187:5000/reckoner/categories");
+        const categoriesRes = await axios.get("http://localhost:5000/reckoner/categories");
         setCategories(categoriesRes.data.data || []);
 
         setLoading((prev) => ({ ...prev, subcategories: true }));
-        const subcategoriesRes = await axios.get("http://192.168.253.187:5000/reckoner/subcategories");
+        const subcategoriesRes = await axios.get("http://localhost:5000/reckoner/subcategories");
         setSubcategories(subcategoriesRes.data.data || []);
 
         setLoading((prev) => ({ ...prev, workItems: true }));
-        const workItemsRes = await axios.get("http://192.168.253.187:5000/reckoner/work-items");
+        const workItemsRes = await axios.get("http://localhost:5000/reckoner/work-items");
         setWorkItems(workItemsRes.data.data || []);
       } catch (err) {
         Swal.fire({
@@ -1253,7 +1248,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
-            const response = await axios.post("http://192.168.253.187:5000/project/create-project", {
+            const response = await axios.post("http://localhost:5000/project/create-project", {
               company_id: selectedCompanyId,
               project_name: result.value,
             });
@@ -1418,6 +1413,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
   const addCategory = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    const newCategoryIndex = formData.categories.length;
     setFormData((prev) => ({
       ...prev,
       categories: [
@@ -1445,6 +1441,8 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
         },
       ],
     }));
+    // Set the new category as open by default
+    setOpenCategories((prev) => ({ ...prev, [newCategoryIndex]: true }));
   };
 
   const removeCategory = (index) => {
@@ -1453,6 +1451,21 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
         ...prev,
         categories: prev.categories.filter((_, i) => i !== index),
       }));
+      setOpenCategories((prev) => {
+        const newOpenCategories = { ...prev };
+        delete newOpenCategories[index];
+        // Reindex the remaining categories
+        const updatedOpenCategories = {};
+        Object.keys(newOpenCategories).forEach((key) => {
+          const numKey = parseInt(key);
+          if (numKey > index) {
+            updatedOpenCategories[numKey - 1] = newOpenCategories[key];
+          } else {
+            updatedOpenCategories[numKey] = newOpenCategories[key];
+          }
+        });
+        return updatedOpenCategories;
+      });
     }
   };
 
@@ -1532,10 +1545,17 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
     }
   };
 
+  const toggleCategory = (index) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
   const processSite = async (poNumber) => {
     try {
       setLoading((prev) => ({ ...prev, processing: true }));
-      await axios.get(`http://192.168.253.187:5000/sheet/process/${encodeURIComponent(poNumber)}`);
+      await axios.get(`http://localhost:5000/sheet/process/${encodeURIComponent(poNumber)}`);
       return true;
     } catch (error) {
       console.error("Error processing site:", error);
@@ -1595,7 +1615,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
         })),
       };
 
-      await axios.post("http://192.168.253.187:5000/reckoner/reckoner", submissionData);
+      await axios.post("http://localhost:5000/reckoner/reckoner", submissionData);
       await processSite(formData.poNumber);
 
       Swal.fire({
@@ -1613,6 +1633,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
       setSelectedCompanyId("");
       setSelectedProject("");
       setSelectedSite("");
+      setOpenCategories({ 0: true }); // Reset to first category open
       if (onCompanySelect) {
         onCompanySelect("");
       }
@@ -1644,13 +1665,18 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
               <select
                 value={selectedCompanyId}
                 onChange={handleCompanyChange}
-                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm"
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm appearance-none bg-white"
                 disabled={loading.companies}
               >
-                <option value="">Select Company</option>
-                <option value="create_new_company">Create New Company</option>
+                <option value="" className="text-gray-500">Select Company</option>
+                <option
+                  value="create_new_company"
+                  className="bg-indigo-100 text-indigo-700 font-medium py-2 px-3 hover:bg-indigo-200 transition-colors duration-200"
+                >
+                  + Create New Company
+                </option>
                 {companies.map((company) => (
-                  <option key={company.company_id} value={company.company_id}>
+                  <option key={company.company_id} value={company.company_id} className="py-2 px-3">
                     {company.company_name}
                   </option>
                 ))}
@@ -1661,13 +1687,18 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
               <select
                 value={selectedProject}
                 onChange={handleProjectChange}
-                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm"
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm appearance-none bg-white"
                 disabled={loading.projects || !selectedCompanyId}
               >
-                <option value="">Select Project</option>
-                <option value="create_new_project">Create New Project</option>
+                <option value="" className="text-gray-500">Select Project</option>
+                <option
+                  value="create_new_project"
+                  className="bg-indigo-100 text-indigo-700 font-medium py-2 px-3 hover:bg-indigo-200 transition-colors duration-200"
+                >
+                  + Create New Project
+                </option>
                 {projects.map((project) => (
-                  <option key={project.pd_id} value={project.pd_id}>
+                  <option key={project.pd_id} value={project.pd_id} className="py-2 px-3">
                     {project.project_name}
                   </option>
                 ))}
@@ -1678,13 +1709,18 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
               <select
                 value={selectedSite}
                 onChange={handleSiteChange}
-                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm"
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm appearance-none bg-white"
                 disabled={loading.sites || !selectedProject}
               >
-                <option value="">Select Site</option>
-                <option value="create_new_site">Create New Site</option>
+                <option value="" className="text-gray-500">Select Site</option>
+                <option
+                  value="create_new_site"
+                  className="bg-indigo-100 text-indigo-700 font-medium py-2 px-3 hover:bg-indigo-200 transition-colors duration-200"
+                >
+                  + Create New Site
+                </option>
                 {sites.map((site) => (
-                  <option key={site.site_id} value={site.site_id}>
+                  <option key={site.site_id} value={site.site_id} className="py-2 px-3">
                     {site.site_name} (PO: {site.po_number})
                   </option>
                 ))}
@@ -1713,42 +1749,56 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
             {formData.categories.map((category, categoryIndex) => (
               <div
                 key={categoryIndex}
-                className={`border rounded-lg p-4 space-y-4 ${getRandomColor(categoryIndex)} border-2`}
+                className={`border rounded-lg p-4 space-y-4 ${getRandomColor(categoryIndex)} border-2 shadow-sm transition-all duration-300`}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Category Name</label>
-                    <select
-                      name="categoryName"
-                      value={category.categoryName}
-                      onChange={(e) => handleCategoryChange(categoryIndex, e)}
-                      className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm"
-                      required
-                      disabled={loading.categories}
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map((cat) => (
-                        <option key={cat.category_id} value={cat.category_name}>
-                          {cat.category_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-end justify-end">
-                    {formData.categories.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeCategory(categoryIndex)}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors duration-200"
+                <div className="flex justify-between items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Category Name</label>
+                      <select
+                        name="categoryName"
+                        value={category.categoryName}
+                        onChange={(e) => handleCategoryChange(categoryIndex, e)}
+                        className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-sm"
+                        required
+                        disabled={loading.categories}
                       >
-                        Remove Category
-                      </button>
-                    )}
+                        <option value="" className="text-gray-500">Select Category</option>
+                        {categories.map((cat) => (
+                          <option key={cat.category_id} value={cat.category_name} className="py-2 px-3">
+                            {cat.category_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-end justify-end">
+                      {formData.categories.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeCategory(categoryIndex)}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors duration-200"
+                        >
+                          Remove Category
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(categoryIndex)}
+                    className="ml-4 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                    aria-label={openCategories[categoryIndex] ? "Collapse Category" : "Expand Category"}
+                  >
+                    {openCategories[categoryIndex] ? (
+                      <ChevronUp className="w-5 h-5 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-600" />
+                    )}
+                  </button>
                 </div>
 
-                {category.categoryName && (
-                  <div className="space-y-6 mt-4">
+                {openCategories[categoryIndex] && category.categoryName && (
+                  <div className="space-y-6 mt-4 transition-all duration-300">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <h3 className="text-md font-semibold text-gray-700">Subcategories</h3>
                       <button
@@ -1764,7 +1814,7 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
                     {category.subcategories.map((subcategory, subcatIndex) => (
                       <div
                         key={subcatIndex}
-                        className={`border rounded-lg p-4 space-y-4 ${getRandomColor(subcatIndex + 1)} border-2`}
+                        className={`border rounded-lg p-4 space-y-4 ${getRandomColor(subcatIndex + 1)} border-2 shadow-sm`}
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -1780,9 +1830,9 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
                               required
                               disabled={loading.subcategories}
                             >
-                              <option value="">Select Subcategory</option>
+                              <option value="" className="text-gray-500">Select Subcategory</option>
                               {subcategories.map((subcat) => (
-                                <option key={subcat.subcategory_id} value={subcat.subcategory_name}>
+                                <option key={subcat.subcategory_id} value={subcat.subcategory_name} className="py-2 px-3">
                                   {subcat.subcategory_name}
                                 </option>
                               ))}
@@ -1866,9 +1916,9 @@ const CreateReckoner = ({ onShowCompanyModal, onShowProjectModal, selectedCompan
                                           required
                                           disabled={loading.workItems}
                                         >
-                                          <option value="">Select Description</option>
+                                          <option value="" className="text-gray-500">Select Description</option>
                                           {workItems.map((item) => (
-                                            <option key={item.desc_id} value={item.desc_name}>
+                                            <option key={item.desc_id} value={item.desc_name} className="py-2 px-3">
                                               {item.desc_name}
                                             </option>
                                           ))}

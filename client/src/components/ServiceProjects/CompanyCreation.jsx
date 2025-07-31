@@ -23,7 +23,7 @@
 //     setError(null);
 
 //     try {
-//       await axios.post("http://192.168.253.187:5000/project/create-company", formData);
+//       await axios.post("http://localhost:5000/project/create-company", formData);
 //       setFormData({ company_name: "", address: "", spoc_name: "", spoc_contact_no: "" });
 //       onCompanyCreated();
 //     } catch (error) {
@@ -193,7 +193,7 @@ const CompanyCreation = ({ onCompanyCreated, onClose }) => {
     setError(null);
 
     try {
-      await axios.post("http://192.168.253.187:5000/project/create-company", formData);
+      await axios.post("http://localhost:5000/project/create-company", formData);
       setFormData({ company_name: "", address: "", spoc_name: "", spoc_contact_no: "" });
       onCompanyCreated();
     } catch (error) {

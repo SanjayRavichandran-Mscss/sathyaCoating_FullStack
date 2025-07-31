@@ -302,37 +302,37 @@ exports.getReckonerTypes = async () => {
 };
 
 exports.getNextPoNumber = async (reckoner_type_id) => {
-  console.log(`Fetching next PO number for reckoner_type_id: ${reckoner_type_id}`);
-  const [reckonerType] = await db.query(
-    "SELECT type_name FROM reckoner_types WHERE type_id = ?",
-    [reckoner_type_id]
-  );
-  if (!reckonerType.length) {
-    console.error(`No reckoner type found for type_id: ${reckoner_type_id}`);
-    return null;
-  }
-  const type_name = reckonerType[0].type_name.toLowerCase();
-  console.log(`Reckoner type_name: ${type_name}`);
-  if (type_name !== 'sample' && type_name !== 'not_approved') {
-    console.error(`Reckoner type ${type_name} not applicable for auto-generation`);
-    return null;
-  }
-  const prefix = type_name === 'sample' ? 'SA' : 'NA';
-  const [rows] = await db.query(
-    `SELECT po_number FROM site_details 
-     WHERE po_number LIKE ? 
-     ORDER BY CAST(SUBSTRING(po_number, 3) AS UNSIGNED) DESC 
-     LIMIT 1`,
-    [`${prefix}%`]
-  );
-  if (!rows.length) {
-    console.log(`No existing ${prefix}-prefixed PO number found, starting with ${prefix}0000000001`);
-    return `${prefix}0000000001`;
-  }
-  const lastNumber = parseInt(rows[0].po_number.substring(2)) || 0;
-  const nextPoNumber = `${prefix}${String(lastNumber + 1).padStart(10, '0')}`;
-  console.log(`Generated next PO number: ${nextPoNumber}`);
-  return nextPoNumber;
+    console.log(`Fetching next PO number for reckoner_type_id: ${reckoner_type_id}`);
+    const [reckonerType] = await db.query(
+        "SELECT type_name FROM reckoner_types WHERE type_id = ?",
+        [reckoner_type_id]
+    );
+    if (!reckonerType.length) {
+        console.error(`No reckoner type found for type_id: ${reckoner_type_id}`);
+        return null;
+    }
+    const type_name = reckonerType[0].type_name.toLowerCase();
+    console.log(`Reckoner type_name: ${type_name}`);
+    if (type_name !== 'sample' && type_name !== 'not approved') {
+        console.error(`Reckoner type ${type_name} not applicable for auto-generation`);
+        return null;
+    }
+    const prefix = type_name === 'sample' ? 'SA' : 'NA'; // SA for Sample, NA for Not Approved
+    const [rows] = await db.query(
+        `SELECT po_number FROM site_details 
+         WHERE po_number LIKE ? 
+         ORDER BY CAST(SUBSTRING(po_number, 3) AS UNSIGNED) DESC 
+         LIMIT 1`,
+        [`${prefix}%`]
+    );
+    if (!rows.length) {
+        console.log(`No existing ${prefix}-prefixed PO number found, starting with ${prefix}0000000001`);
+        return `${prefix}0000000001`;
+    }
+    const lastNumber = parseInt(rows[0].po_number.substring(2)) || 0;
+    const nextPoNumber = `${prefix}${String(lastNumber + 1).padStart(10, '0')}`;
+    console.log(`Generated next PO number: ${nextPoNumber}`);
+    return nextPoNumber;
 };
 
 exports.createProject = async (company_id, project_name) => {

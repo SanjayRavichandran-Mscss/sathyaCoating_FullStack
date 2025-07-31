@@ -24,8 +24,8 @@
 //         setLoading(true);
 //         setError(null);
 //         const [companiesResponse, projectsResponse] = await Promise.all([
-//           axios.get("http://192.168.253.187:5000/project/companies"),
-//           axios.get("http://192.168.253.187:5000/project/projects-with-sites"),
+//           axios.get("http://localhost:5000/project/companies"),
+//           axios.get("http://localhost:5000/project/projects-with-sites"),
 //         ]);
 //         setCompanies(companiesResponse.data || []);
 //         setProjects(projectsResponse.data || []);
@@ -303,8 +303,8 @@ const ViewProjects = () => {
         setLoading(true);
         setError(null);
         const [companiesResponse, projectsResponse] = await Promise.all([
-          axios.get("http://192.168.253.187:5000/project/companies"),
-          axios.get("http://192.168.253.187:5000/project/projects-with-sites"),
+          axios.get("http://localhost:5000/project/companies"),
+          axios.get("http://localhost:5000/project/projects-with-sites"),
         ]);
         setCompanies(companiesResponse.data || []);
         setProjects(projectsResponse.data || []);

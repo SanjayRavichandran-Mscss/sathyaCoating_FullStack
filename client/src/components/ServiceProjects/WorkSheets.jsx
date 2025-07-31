@@ -44,7 +44,7 @@ const ResizableGrid = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://192.168.253.187:5000/sheet/worksheet/${site_id}/${report_type_id}`
+          `http://localhost:5000/sheet/worksheet/${site_id}/${report_type_id}`
         );
 
         if (!response.ok) {
@@ -195,7 +195,7 @@ const ResizableGrid = () => {
         }
       }
 
-      const response = await fetch('http://192.168.253.187:5000/sheet/worksheet/update', {
+      const response = await fetch('http://localhost:5000/sheet/worksheet/update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -603,4 +603,17 @@ const ResizableGrid = () => {
 };
 
 export default ResizableGrid;
+
+
+
+
+
+
+
+
+
+
+
+
+
 

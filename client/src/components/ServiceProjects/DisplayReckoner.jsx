@@ -67,7 +67,7 @@
 //   const fetchSites = async () => {
 //     try {
 //       setLoadingSites(true);
-//       const res = await axios.get("http://192.168.253.187:5000/reckoner/sites");
+//       const res = await axios.get("http://localhost:5000/reckoner/sites");
 //       if (res.data.success) {
 //         const options = res.data.data.map((site) => ({
 //           po_number: site.po_number,
@@ -108,7 +108,7 @@
 //     try {
 //       setLoadingSite(true);
 //       const res = await axios.get(
-//         `http://192.168.253.187:5000/reckoner/sites/${poNumber}`
+//         `http://localhost:5000/reckoner/sites/${poNumber}`
 //       );
 //       if (res.data.success) {
 //         setSiteInfo(res.data.data);
@@ -151,7 +151,7 @@
 //   const fetchReckonerData = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("http://192.168.253.187:5000/reckoner/reckoner/");
+//       const res = await axios.get("http://localhost:5000/reckoner/reckoner/");
 //       const data = res.data.success ? res.data.data : [];
 //       setReckonerData(data);
 //       setFilteredData(data);
@@ -203,7 +203,7 @@
 //     try {
 //       setSubmitting(true);
 //       await axios.patch(
-//         `http://192.168.253.187:5000/reckoner/completion_status/${rec_id}`,
+//         `http://localhost:5000/reckoner/completion_status/${rec_id}`,
 //         editingData
 //       );
 //       showAlert("success", "Data updated successfully");
@@ -655,8 +655,6 @@
 
 
 
-
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -728,7 +726,7 @@ const DisplayReckoner = () => {
   const fetchSites = async () => {
     try {
       setLoadingSites(true);
-      const res = await axios.get("http://192.168.253.187:5000/reckoner/sites");
+      const res = await axios.get("http://localhost:5000/reckoner/sites");
       if (res.data.success) {
         const options = res.data.data.map((site) => ({
           po_number: site.po_number,
@@ -769,7 +767,7 @@ const DisplayReckoner = () => {
     try {
       setLoadingSite(true);
       const res = await axios.get(
-        `http://192.168.253.187:5000/reckoner/sites/${poNumber}`
+        `http://localhost:5000/reckoner/sites/${poNumber}`
       );
       if (res.data.success) {
         setSiteInfo(res.data.data);
@@ -812,7 +810,7 @@ const DisplayReckoner = () => {
   const fetchReckonerData = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://192.168.253.187:5000/reckoner/reckoner/");
+      const res = await axios.get("http://localhost:5000/reckoner/reckoner/");
       const data = res.data.success ? res.data.data : [];
       setReckonerData(data);
       setFilteredData(data);
@@ -864,7 +862,7 @@ const DisplayReckoner = () => {
     try {
       setSubmitting(true);
       await axios.patch(
-        `http://192.168.253.187:5000/reckoner/completion_status/${rec_id}`,
+        `http://localhost:5000/reckoner/completion_status/${rec_id}`,
         editingData
       );
       showAlert("success", "Data updated successfully");
@@ -881,11 +879,11 @@ const DisplayReckoner = () => {
   const renderStatusTag = (status) => {
     const icon =
       status === "Completed" ? (
-        <CalendarCheck className="w-4 h-4 text-green-600 mr-2" />
+        <CalendarCheck className="w-4 h-4 text-green-600 mr-1" />
       ) : status === "In Progress" ? (
-        <HardHat className="w-4 h-4 text-blue-600 mr-2" />
+        <HardHat className="w-4 h-4 text-blue-600 mr-1" />
       ) : (
-        <AlertCircle className="w-4 h-4 text-orange-500 mr-2" />
+        <AlertCircle className="w-4 h-4 text-orange-500 mr-1" />
       );
 
     const color =
@@ -897,7 +895,7 @@ const DisplayReckoner = () => {
 
     return (
       <div
-        className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${color}`}
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${color}`}
       >
         {icon}
         {status}
@@ -923,13 +921,14 @@ const DisplayReckoner = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 md:p-8">
+      {/* Alert Notification */}
       {alert.message && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-transform duration-300 transform ${
             alert.type === "error"
-              ? "bg-red-100 text-red-800 border-l-4 border-red-500"
-              : "bg-green-100 text-green-800 border-l-4 border-green-500"
+              ? "bg-red-50 text-red-800 border-l-4 border-red-500"
+              : "bg-green-50 text-green-800 border-l-4 border-green-500"
           }`}
         >
           <div className="flex items-center">
@@ -938,30 +937,30 @@ const DisplayReckoner = () => {
             ) : (
               <CheckCircle className="w-5 h-5 mr-2" />
             )}
-            <span className="text-sm">{alert.message}</span>
+            <span className="text-sm font-medium">{alert.message}</span>
           </div>
         </div>
       )}
 
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
             Project Reckoner
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Manage and track project progress with ease
+          <p className="mt-2 text-sm sm:text-base text-gray-600">
+            Track and manage your project progress seamlessly
           </p>
         </div>
 
-        {/* Improved Site Selection Dropdown */}
-        <div className="mb-8" ref={dropdownRef}>
+        {/* Site Selection Dropdown */}
+        <div className="mb-6 sm:mb-8" ref={dropdownRef}>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Select Site
           </label>
           <div className="relative max-w-md">
             {dropdownOpen ? (
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <div className="flex items-center px-3 py-2 border-b border-gray-200">
                   <Search className="h-5 w-5 text-gray-400" />
                   <input
@@ -969,8 +968,8 @@ const DisplayReckoner = () => {
                     autoFocus
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    placeholder="Search sites..."
-                    className="flex-1 py-2 px-3 text-sm focus:outline-none"
+                    placeholder="Search sites or PO numbers..."
+                    className="flex-1 py-2 px-3 text-sm focus:outline-none bg-transparent"
                   />
                   <button
                     onClick={() => setDropdownOpen(false)}
@@ -1012,12 +1011,12 @@ const DisplayReckoner = () => {
             ) : (
               <button
                 onClick={() => setDropdownOpen(true)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm text-left hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-left hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
               >
                 <div>
                   {selectedSite ? (
                     <>
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium text-gray-900 text-sm sm:text-base">
                         {
                           siteOptions.find((opt) => opt.po_number === selectedSite)
                             ?.site_name
@@ -1028,7 +1027,9 @@ const DisplayReckoner = () => {
                       </div>
                     </>
                   ) : (
-                    <span className="text-gray-500">Select a site...</span>
+                    <span className="text-gray-500 text-sm sm:text-base">
+                      Select a site...
+                    </span>
                   )}
                 </div>
                 <ChevronDown className="h-5 w-5 text-gray-400" />
@@ -1038,7 +1039,7 @@ const DisplayReckoner = () => {
         </div>
 
         {/* Report Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 sm:mb-8">
           {[
             {
               label: "Site Progress",
@@ -1063,10 +1064,10 @@ const DisplayReckoner = () => {
               key={button.label}
               onClick={() => handleReportRedirect(button.reportId)}
               disabled={loadingSite || !siteInfo?.site_id}
-              className={`flex items-center justify-center px-4 py-3 rounded-lg shadow-md text-white bg-gradient-to-r ${button.color} hover:opacity-90 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200`}
+              className={`flex items-center justify-center px-4 py-3 rounded-xl shadow-md text-white bg-gradient-to-r ${button.color} hover:opacity-90 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base font-medium`}
             >
               <button.icon className="mr-2 h-5 w-5" />
-              <span className="text-sm font-medium">{button.label}</span>
+              {button.label}
             </button>
           ))}
         </div>
@@ -1074,223 +1075,157 @@ const DisplayReckoner = () => {
         {/* Data Table */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-white rounded-lg shadow-md border border-gray-200">
-            {/* ----------- NEW TABLE DESIGN ------------ */}
-            <table className="min-w-full divide-y divide-gray-200">
-              {/* Main header row */}
-              <thead>
-                <tr className="bg-gradient-to-r from-indigo-600 to-indigo-800">
-                  {/* Main item columns */}
-                  <th
-                    className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider align-bottom"
-                    rowSpan={2}
-                  >
-                    Item
-                  </th>
-                  <th
-                    className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider align-bottom"
-                    rowSpan={2}
-                  >
-                    Description
-                  </th>
-                  {/* Merged columns */}
-                  <th
-                    className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider align-bottom border-l border-indigo-500"
-                    colSpan={3}
-                  >
-                    PO Details
-                  </th>
-                  <th
-                    className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider align-bottom border-l border-indigo-500"
-                    colSpan={3}
-                  >
-                    Completion
-                  </th>
-                  <th
-                    className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider align-bottom border-l border-indigo-500"
-                    colSpan={3}
-                  >
-                    Billing
-                  </th>
-                  <th
-                    className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider align-bottom"
-                    rowSpan={2}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider align-bottom"
-                    rowSpan={2}
-                  >
-                    Action
-                  </th>
-                </tr>
-                {/* Sub-column headers */}
-                <tr className="bg-gradient-to-r from-indigo-500 to-indigo-700">
-                  {/* PO Details */}
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white border-l border-indigo-500">
-                    Qty
-                  </th>
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white">
-                    Rate
-                  </th>
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white">
-                    Value
-                  </th>
-                  {/* Completion */}
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white border-l border-indigo-500">
-                    Area
-                  </th>
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white">
-                    Rate
-                  </th>
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white">
-                    Value
-                  </th>
-                  {/* Billing */}
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white border-l border-indigo-500">
-                    Billed
-                  </th>
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white">
-                    Value
-                  </th>
-                  <th className="px-2 py-2 text-center text-xs font-semibold text-white">
-                    Balance
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentPoGroup.map((r) => (
-                  <tr
-                    key={r.rec_id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    {/* ITEM cell */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-top bg-gray-50">
-                      <div>{r.item_id}</div>
+          <div className="bg-white rounded-xl shadow-md border border-gray-200">
+            {/* Mobile View: Card Layout */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {currentPoGroup.map((r) => (
+                <div key={r.rec_id} className="p-4 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {r.item_id}
+                      </div>
                       <div className="text-xs text-gray-500">
                         {r.category_name} / {r.subcategory_name}
                       </div>
-                    </td>
-                    {/* DESCRIPTION cell */}
-                    <td className="px-4 py-4 max-w-xs align-top bg-gray-50">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <FileText className="flex-shrink-0 mr-2 h-4 w-4 text-indigo-600" />
-                        <span className="truncate">{r.work_descriptions}</span>
-                      </div>
-                    </td>
-                    {/* PO DETAILS - Qty, Rate, Value */}
-                    <td className="px-2 py-4 text-center">{r.po_quantity} {r.uom}</td>
-                    <td className="px-2 py-4 text-center">{r.rate}</td>
-                    <td className="px-2 py-4 text-center border-r border-gray-200">{r.value}</td>
-                    {/* COMPLETION - Area, Rate, Value. Edit mode supported */}
-                    {editingId === r.rec_id ? (
-                      <>
-                        <td className="px-2 py-4 text-center">
+                    </div>
+                    <div className="flex gap-2">
+                      {editingId === r.rec_id ? (
+                        <>
+                          <button
+                            onClick={() => handleSubmit(r.rec_id)}
+                            disabled={submitting}
+                            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300"
+                          >
+                            <Save className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleEdit(r)}
+                          className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-900 flex items-center">
+                    <FileText className="mr-2 h-4 w-4 text-indigo-600" />
+                    <span className="truncate">{r.work_descriptions}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="font-medium text-gray-700">PO Details</div>
+                      <div>Qty: {r.po_quantity} {r.uom}</div>
+                      <div>Rate: {r.rate}</div>
+                      <div>Value: {r.value}</div>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-700">Completion</div>
+                      {editingId === r.rec_id ? (
+                        <>
                           <input
                             type="text"
                             value={editingData.area_completed}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("area_completed", e.target.value)
                             }
-                            className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                            className="w-full p-1 border border-gray-300 rounded text-sm"
                             placeholder="Area"
                           />
-                        </td>
-                        <td className="px-2 py-4 text-center">
                           <input
                             type="text"
                             value={editingData.rate}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("rate", e.target.value)
                             }
-                            className="w-16 p-1 border border-gray-300 rounded text-sm text-center"
+                            className="w-full p-1 border border-gray-300 rounded text-sm mt-2"
                             placeholder="Rate"
                           />
-                        </td>
-                        <td className="px-2 py-4 text-center border-r border-gray-200">
                           <input
                             type="text"
                             value={editingData.value}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("value", e.target.value)
                             }
-                            className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                            className="w-full p-1 border border-gray-300 rounded text-sm mt-2"
                             placeholder="Value"
                           />
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-2 py-4 text-center">
-                          {r.area_completed}
-                        </td>
-                        <td className="px-2 py-4 text-center">{r.completion_rate}</td>
-                        <td className="px-2 py-4 text-center border-r border-gray-200">
-                          {r.completion_value}
-                        </td>
-                      </>
-                    )}
-                    {/* BILLING - Billed Area, Value, Balance Area */}
-                    {editingId === r.rec_id ? (
-                      <>
-                        <td className="px-2 py-4 text-center">
+                        </>
+                      ) : (
+                        <>
+                          <div>Area: {r.area_completed}</div>
+                          <div>Rate: {r.completion_rate}</div>
+                          <div>Value: {r.completion_value}</div>
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-700">Billing</div>
+                      {editingId === r.rec_id ? (
+                        <>
                           <input
                             type="text"
                             value={editingData.billed_area}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("billed_area", e.target.value)
                             }
-                            className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                            className="w-full p-1 border border-gray-300 rounded text-sm"
                             placeholder="Billed"
                           />
-                        </td>
-                        <td className="px-2 py-4 text-center">
                           <input
                             type="text"
                             value={editingData.billed_value}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("billed_value", e.target.value)
                             }
-                            className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                            className="w-full p-1 border border-gray-300 rounded text-sm mt-2"
                             placeholder="Value"
                           />
-                        </td>
-                        <td className="px-2 py-4 text-center border-r border-gray-200">
                           <input
                             type="text"
                             value={editingData.balance_area}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("balance_area", e.target.value)
                             }
-                            className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                            className="w-full p-1 border border-gray-300 rounded text-sm mt-2"
                             placeholder="Balance"
                           />
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-2 py-4 text-center">{r.billed_area}</td>
-                        <td className="px-2 py-4 text-center">{r.billed_value}</td>
-                        <td className="px-2 py-4 text-center border-r border-gray-200">
-                          <div>{r.balance_area}</div>
-                          <div className="text-xs text-gray-400">
-                            {r.balance_value ? `₹${r.balance_value}` : ""}
+                        </>
+                      ) : (
+                        <>
+                          <div>Billed: {r.billed_area}</div>
+                          <div>Value: {r.billed_value}</div>
+                          <div>
+                            Balance: {r.balance_area}
+                            {r.balance_value && (
+                              <span className="text-gray-400">
+                                {" "}
+                                (₹{r.balance_value})
+                              </span>
+                            )}
                           </div>
-                        </td>
-                      </>
-                    )}
-                    {/* STATUS */}
-                    <td className="px-4 py-4 space-y-2 text-xs text-center align-top">
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-700">Status</div>
                       {editingId === r.rec_id ? (
                         <>
                           <select
-                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            className="w-full p-1 border border-gray-300 rounded text-sm"
                             value={editingData.work_status}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("work_status", e.target.value)
                             }
                           >
@@ -1299,56 +1234,299 @@ const DisplayReckoner = () => {
                             <option value="Pending">Pending</option>
                           </select>
                           <select
-                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            className="w-full p-1 border border-gray-300 rounded text-sm mt-2"
                             value={editingData.billing_status}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleEditChange("billing_status", e.target.value)
                             }
                           >
                             <option value="Billed">Billed</option>
                             <option value="Not Billed">Not Billed</option>
-                            <option value="Partially Billed">Partially Billed</option>
+                            <option value="Partially Billed">
+                              Partially Billed
+                            </option>
                           </select>
                         </>
                       ) : (
-                        <>
+                        <div className="space-y-2">
                           {renderStatusTag(r.work_status)}
                           {renderStatusTag(r.billing_status)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View: Table Layout */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr className="bg-gradient-to-r from-indigo-600 to-indigo-700">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                      rowSpan={2}
+                    >
+                      Item
+                    </th>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                      rowSpan={2}
+                    >
+                      Description
+                    </th>
+                    <th
+                      className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider"
+                      colSpan={3}
+                    >
+                      PO Details
+                    </th>
+                    <th
+                      className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider"
+                      colSpan={3}
+                    >
+                      Completion
+                    </th>
+                    <th
+                      className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider"
+                      colSpan={3}
+                    >
+                      Billing
+                    </th>
+                    <th
+                      className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider"
+                      rowSpan={2}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider"
+                      rowSpan={2}
+                    >
+                      Action
+                    </th>
+                  </tr>
+                  <tr className="bg-indigo-500">
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Qty
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Rate
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Value
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Area
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Rate
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Value
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Billed
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Value
+                    </th>
+                    <th className="px-2 py-2 text-center text-xs font-semibold text-white">
+                      Balance
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentPoGroup.map((r) => (
+                    <tr
+                      key={r.rec_id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                        <div>{r.item_id}</div>
+                        <div className="text-xs text-gray-500">
+                          {r.category_name} / {r.subcategory_name}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 max-w-xs text-sm text-gray-900">
+                        <div className="flex items-center">
+                          <FileText className="mr-2 h-4 w-4 text-indigo-600" />
+                          <span className="truncate">{r.work_descriptions}</span>
+                        </div>
+                      </td>
+                      <td className="px-2 py-4 text-center text-sm">
+                        {r.po_quantity} {r.uom}
+                      </td>
+                      <td className="px-2 py-4 text-center text-sm">{r.rate}</td>
+                      <td className="px-2 py-4 text-center text-sm">{r.value}</td>
+                      {editingId === r.rec_id ? (
+                        <>
+                          <td className="px-2 py-4 text-center">
+                            <input
+                              type="text"
+                              value={editingData.area_completed}
+                              onChange={(e) =>
+                                handleEditChange("area_completed", e.target.value)
+                              }
+                              className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                              placeholder="Area"
+                            />
+                          </td>
+                          <td className="px-2 py-4 text-center">
+                            <input
+                              type="text"
+                              value={editingData.rate}
+                              onChange={(e) =>
+                                handleEditChange("rate", e.target.value)
+                              }
+                              className="w-16 p-1 border border-gray-300 rounded text-sm text-center"
+                              placeholder="Rate"
+                            />
+                          </td>
+                          <td className="px-2 py-4 text-center">
+                            <input
+                              type="text"
+                              value={editingData.value}
+                              onChange={(e) =>
+                                handleEditChange("value", e.target.value)
+                              }
+                              className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                              placeholder="Value"
+                            />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-2 py-4 text-center text-sm">
+                            {r.area_completed}
+                          </td>
+                          <td className="px-2 py-4 text-center text-sm">
+                            {r.completion_rate}
+                          </td>
+                          <td className="px-2 py-4 text-center text-sm">
+                            {r.completion_value}
+                          </td>
                         </>
                       )}
-                    </td>
-                    {/* ACTION */}
-                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
                       {editingId === r.rec_id ? (
-                        <div className="flex gap-2 justify-end">
-                          <button
-                            onClick={() => handleSubmit(r.rec_id)}
-                            disabled={submitting}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none"
-                          >
-                            <Save className="mr-2 h-4 w-4" /> Save
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none"
-                          >
-                            <X className="mr-2 h-4 w-4" /> Cancel
-                          </button>
-                        </div>
+                        <>
+                          <td className="px-2 py-4 text-center">
+                            <input
+                              type="text"
+                              value={editingData.billed_area}
+                              onChange={(e) =>
+                                handleEditChange("billed_area", e.target.value)
+                              }
+                              className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                              placeholder="Billed"
+                            />
+                          </td>
+                          <td className="px-2 py-4 text-center">
+                            <input
+                              type="text"
+                              value={editingData.billed_value}
+                              onChange={(e) =>
+                                handleEditChange("billed_value", e.target.value)
+                              }
+                              className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                              placeholder="Value"
+                            />
+                          </td>
+                          <td className="px-2 py-4 text-center">
+                            <input
+                              type="text"
+                              value={editingData.balance_area}
+                              onChange={(e) =>
+                                handleEditChange("balance_area", e.target.value)
+                              }
+                              className="w-20 p-1 border border-gray-300 rounded text-sm text-center"
+                              placeholder="Balance"
+                            />
+                          </td>
+                        </>
                       ) : (
-                        <button
-                          onClick={() => handleEdit(r)}
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-                        >
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </button>
+                        <>
+                          <td className="px-2 py-4 text-center text-sm">
+                            {r.billed_area}
+                          </td>
+                          <td className="px-2 py-4 text-center text-sm">
+                            {r.billed_value}
+                          </td>
+                          <td className="px-2 py-4 text-center text-sm">
+                            <div>{r.balance_area}</div>
+                            <div className="text-xs text-gray-400">
+                              {r.balance_value ? `₹${r.balance_value}` : ""}
+                            </div>
+                          </td>
+                        </>
                       )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {/* ----------- END NEW TABLE DESIGN -------- */}
+                      <td className="px-4 py-4 text-center text-sm space-y-2">
+                        {editingId === r.rec_id ? (
+                          <>
+                            <select
+                              className="w-full p-1 border border-gray-300 rounded text-sm"
+                              value={editingData.work_status}
+                              onChange={(e) =>
+                                handleEditChange("work_status", e.target.value)
+                              }
+                            >
+                              <option value="In Progress">In Progress</option>
+                              <option value="Completed">Completed</option>
+                              <option value="Pending">Pending</option>
+                            </select>
+                            <select
+                              className="w-full p-1 border border-gray-300 rounded text-sm mt-2"
+                              value={editingData.billing_status}
+                              onChange={(e) =>
+                                handleEditChange("billing_status", e.target.value)
+                              }
+                            >
+                              <option value="Billed">Billed</option>
+                              <option value="Not Billed">Not Billed</option>
+                              <option value="Partially Billed">
+                                Partially Billed
+                              </option>
+                            </select>
+                          </>
+                        ) : (
+                          <>
+                            {renderStatusTag(r.work_status)}
+                            {renderStatusTag(r.billing_status)}
+                          </>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm">
+                        {editingId === r.rec_id ? (
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => handleSubmit(r.rec_id)}
+                              disabled={submitting}
+                              className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
+                            >
+                              <Save className="mr-1 h-4 w-4" /> Save
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700"
+                            >
+                              <X className="mr-1 h-4 w-4" /> Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleEdit(r)}
+                            className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+                          >
+                            <Edit className="mr-1 h-4 w-4" /> Edit
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
