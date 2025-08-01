@@ -10,8 +10,8 @@ const DispatchMaster = () => {
 
   const renderSection = () => {
     switch (activeSection) {
-      case "siteIncharge":
-        return <AssignSiteIncharge />;
+      // case "siteIncharge":
+      //   return <AssignSiteIncharge />;
       case "material":
         return <AssignMaterial />;
       case "labour":
@@ -21,7 +21,7 @@ const DispatchMaster = () => {
       case "viewMaterials":
         return <ViewAssignedMaterial />;
       default:
-        return <AssignSiteIncharge />;
+        return <AssignMaterial/>;
     }
   };
 
@@ -29,14 +29,14 @@ const DispatchMaster = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div className="flex flex-wrap gap-3">
-          <button
+          {/* <button
             onClick={() => setActiveSection("siteIncharge")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
               ${activeSection === "siteIncharge" ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-teal-50"}
               focus:outline-none focus:ring-2 focus:ring-teal-400`}
           >
             Assign Site Incharge
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveSection("material")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
@@ -56,14 +56,14 @@ const DispatchMaster = () => {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button
+          {/* <button
             onClick={() => setActiveSection("viewIncharges")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
               ${activeSection === "viewIncharges" ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-teal-50"}
               focus:outline-none focus:ring-2 focus:ring-teal-400`}
           >
             View Incharge Details
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveSection("viewMaterials")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200

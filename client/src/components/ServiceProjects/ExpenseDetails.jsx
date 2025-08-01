@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { DiamondPlus, X } from "lucide-react";
+import { parseISO, format } from "date-fns";
 
 const ExpenseDetails = () => {
   const [projects, setProjects] = useState([]);
@@ -66,7 +67,7 @@ const ExpenseDetails = () => {
           ? response.data.data.map((record) => ({
               ...record,
               amount: parseFloat(record.amount),
-              assign_date: record.assign_date.split('T')[0],
+              assign_date: format(parseISO(record.assign_date), "yyyy-MM-dd"),
             }))
           : [];
         setPettyCashRecords(records);
@@ -117,7 +118,7 @@ const ExpenseDetails = () => {
         ? response.data.data.map((record) => ({
             ...record,
             amount: parseFloat(record.amount),
-            assign_date: record.assign_date.split('T')[0],
+            assign_date: format(parseISO(record.assign_date), "yyyy-MM-dd"),
           }))
         : [];
       setPettyCashRecords(records);
@@ -419,9 +420,6 @@ const ExpenseDetails = () => {
 };
 
 export default ExpenseDetails;
-
-
-
 
 
 
