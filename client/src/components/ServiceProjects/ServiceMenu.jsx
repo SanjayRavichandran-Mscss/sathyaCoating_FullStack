@@ -222,11 +222,11 @@ const ServiceMenu = ({ onMenuSelect, activeMenu }) => {
       label: "Employee Details",
       icon: <Contact size={20} />,
     },
-    {
-      id: "dispatchMaster",
-      label: "Dispatch Master",
-      icon: <HardHat size={20} />,
-    },
+    // {
+    //   id: "dispatchMaster",
+    //   label: "Dispatch Master",
+    //   icon: <HardHat size={20} />,
+    // },
     {
       id: "expenseDetails",
       label: "Expense Details",

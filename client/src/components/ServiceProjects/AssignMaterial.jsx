@@ -215,7 +215,7 @@ const AssignMaterial = () => {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
-            Assign Material
+            Material Planning
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Manage and assign materials to your project sites with ease
