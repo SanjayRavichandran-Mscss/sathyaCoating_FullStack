@@ -1,7 +1,6 @@
 // import { useState, useEffect } from "react";
 // import axios from "axios";
 // import { useLocation } from "react-router-dom";
-// import ServiceMenu from "./ServiceMenu";
 // import ViewCompanies from "./ViewCompanies";
 // import ViewProjects from "./ViewProjects";
 // import CreateReckoner from "./CreateReckoner";
@@ -15,11 +14,9 @@
 // import ExpenseDetails from "./ExpenseDetails";
 // import Swal from "sweetalert2";
 
-// const ServiceDashboard = () => {
+// const ServiceDashboard = ({ activeMenu, onCompanySelect, selectedCompanyId }) => {
 //   const location = useLocation();
-//   const [activeView, setActiveView] = useState("createReckoner");
 //   const [companies, setCompanies] = useState([]);
-//   const [selectedCompanyId, setSelectedCompanyId] = useState("");
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState(null);
 //   const [showCompanyModal, setShowCompanyModal] = useState(false);
@@ -29,12 +26,11 @@
 //     try {
 //       setLoading(true);
 //       const response = await axios.get("http://localhost:5000/project/companies");
-//       // Ensure response.data is an array
 //       setCompanies(Array.isArray(response.data) ? response.data : []);
 //     } catch (error) {
 //       console.error("Error fetching companies:", error);
 //       setError("Failed to load companies. Please try again.");
-//       setCompanies([]); // Fallback to empty array
+//       setCompanies([]);
 //     } finally {
 //       setLoading(false);
 //     }
@@ -46,31 +42,11 @@
 
 //   useEffect(() => {
 //     if (location.state?.view) {
-//       setActiveView(location.state.view);
 //       if (location.state.companyId) {
-//         setSelectedCompanyId(location.state.companyId);
+//         onCompanySelect(location.state.companyId);
 //       }
 //     }
-//   }, [location.state]);
-
-//   const handleMenuSelect = (view) => {
-//     setActiveView(view);
-//     if (
-//       view === "createReckoner" ||
-//       view === "displayReckoner" ||
-//       view === "materialDispatch" ||
-//       view === "viewMaterialDispatch" ||
-//       view === "dispatchMaster" ||
-//       view === "employeeDetails" ||
-//       view === "expenseDetails"
-//     ) {
-//       setSelectedCompanyId("");
-//     }
-//   };
-
-//   const handleCompanySelect = (companyId) => {
-//     setSelectedCompanyId(companyId);
-//   };
+//   }, [location.state, onCompanySelect]);
 
 //   const handleCompanyCreated = () => {
 //     fetchCompanies();
@@ -119,7 +95,7 @@
 //       );
 //     }
 
-//     switch (activeView) {
+//     switch (activeMenu) {
 //       case "viewCompanies":
 //         return <ViewCompanies onUpdate={fetchCompanies} />;
 //       case "viewProjects":
@@ -142,8 +118,8 @@
 //             onShowCompanyModal={() => setShowCompanyModal(true)}
 //             onShowProjectModal={() => setShowProjectModal(true)}
 //             selectedCompany={selectedCompanyId}
-//             onCompanySelect={handleCompanySelect}
-//             companies={companies} // Always an array due to fetchCompanies
+//             onCompanySelect={onCompanySelect}
+//             companies={companies}
 //           />
 //         );
 //       default:
@@ -152,7 +128,7 @@
 //             onShowCompanyModal={() => setShowCompanyModal(true)}
 //             onShowProjectModal={() => setShowProjectModal(true)}
 //             selectedCompany={selectedCompanyId}
-//             onCompanySelect={handleCompanySelect}
+//             onCompanySelect={onCompanySelect}
 //             companies={companies}
 //           />
 //         );
@@ -160,13 +136,9 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
-//       <ServiceMenu onMenuSelect={handleMenuSelect} activeMenu={activeView} />
-
-//       <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
-//         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 max-w-full mx-auto border border-gray-200">
-//           {renderActiveView()}
-//         </div>
+//     <div className="flex-1 p-2 sm:p-4 overflow-auto w-full">
+//       <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-full mx-auto border border-gray-200">
+//         {renderActiveView()}
 //       </div>
 
 //       {showCompanyModal && (
@@ -211,8 +183,6 @@
 // };
 
 // export default ServiceDashboard;
-
-
 
 
 
@@ -337,6 +307,8 @@ const ServiceDashboard = ({ activeMenu, onCompanySelect, selectedCompanyId }) =>
         return <EmployeeDetails />;
       case "expenseDetails":
         return <ExpenseDetails />;
+      case "viewDispatchDetails":
+        return <ViewMaterialDispatch />;
       case "createReckoner":
         return (
           <CreateReckoner

@@ -1,301 +1,408 @@
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-
-// const ViewMaterialDispatch = () => {
-//   const [materialData, setMaterialData] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(null);
-//   const [searchTerm, setSearchTerm] = useState("");
-
-//   useEffect(() => {
-//     const fetchMaterialAssignments = async () => {
-//       try {
-//         setLoading(true);
-//         const response = await axios.get("http://localhost:5000/material/material-assignments");
-//         setMaterialData(response.data.data || []);
-//       } catch (error) {
-//         console.error("Error fetching material assignments:", error);
-//         setError("Failed to load material assignments. Please try again.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchMaterialAssignments();
-//   }, []);
-
-//   // Group data by project_name and site_name
-//   const groupedData = materialData.reduce((acc, item) => {
-//     const projectKey = item.project_name;
-//     const siteKey = item.site_name;
-
-//     if (!acc[projectKey]) {
-//       acc[projectKey] = {};
-//     }
-//     if (!acc[projectKey][siteKey]) {
-//       acc[projectKey][siteKey] = [];
-//     }
-//     acc[projectKey][siteKey].push(item);
-//     return acc;
-//   }, {});
-
-//   // Filter data based on search term
-//   const filteredData = Object.keys(groupedData).reduce((acc, project) => {
-//     const sites = groupedData[project];
-//     const filteredSites = Object.keys(sites).reduce((siteAcc, site) => {
-//       const filteredItems = sites[site].filter(
-//         (item) =>
-//           item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//           item.dc_no.toString().includes(searchTerm) ||
-//           item.assign_date.toLowerCase().includes(searchTerm.toLowerCase())
-//       );
-//       if (filteredItems.length > 0) {
-//         siteAcc[site] = filteredItems;
-//       }
-//       return siteAcc;
-//     }, {});
-//     if (Object.keys(filteredSites).length > 0) {
-//       acc[project] = filteredSites;
-//     }
-//     return acc;
-//   }, {});
-
-//   if (loading) {
-//     return (
-//       <div className="flex justify-center items-center h-full min-h-[50vh]">
-//         <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-t-4 border-b-4 border-indigo-600"></div>
-//       </div>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="p-4 sm:p-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm sm:text-base animate-pulse">
-//         {error}
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="flex justify-between items-center">
-//         <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Material Dispatch Details</h2>
-//         <input
-//           type="text"
-//           placeholder="Search by item name, DC number, or date..."
-//           value={searchTerm}
-//           onChange={(e) => setSearchTerm(e.target.value)}
-//           className="p-2 border border-gray-300 rounded-lg w-full max-w-xs sm:max-w-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-//         />
-//       </div>
-
-//       {Object.keys(filteredData).length === 0 ? (
-//         <div className="text-center text-gray-600">No material assignments found.</div>
-//       ) : (
-//         Object.keys(filteredData).map((project) => (
-//           <div key={project} className="mb-8">
-//             <h3 className="text-lg sm:text-xl font-semibold text-indigo-600 mb-4">{project}</h3>
-//             {Object.keys(filteredData[project]).map((site) => (
-//               <div key={site} className="mb-6">
-//                 <h4 className="text-base sm:text-lg font-medium text-gray-700 mb-3">{site}</h4>
-//                 <div className="overflow-x-auto">
-//                   <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-//                     <thead>
-//                       <tr className="bg-indigo-50 text-left text-xs sm:text-sm text-gray-700">
-//                         <th className="p-3 sm:p-4 border-b">Assign Date</th>
-//                         <th className="p-3 sm:p-4 border-b">DC Number</th>
-//                         <th className="p-3 sm:p-4 border-b">PO Number</th>
-//                         <th className="p-3 sm:p-4 border-b">Item Name</th>
-//                         <th className="p-3 sm:p-4 border-b">UOM</th>
-//                         <th className="p-3 sm:p-4 border-b">Quantity</th>
-//                       </tr>
-//                     </thead>
-//                     <tbody>
-//                       {filteredData[project][site].map((item, index) => (
-//                         <tr
-//                           key={index}
-//                           className="text-xs sm:text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-//                         >
-//                           <td className="p-3 sm:p-4 border-b">
-//                             {new Date(item.assign_date).toLocaleDateString()}
-//                           </td>
-//                           <td className="p-3 sm:p-4 border-b">{item.dc_no}</td>
-//                           <td className="p-3 sm:p-4 border-b">{item.po_number}</td>
-//                           <td className="p-3 sm:p-4 border-b">{item.item_name}</td>
-//                           <td className="p-3 sm:p-4 border-b">{item.uom}</td>
-//                           <td className="p-3 sm:p-4 border-b">{item.qty}</td>
-//                         </tr>
-//                       ))}
-//                     </tbody>
-//                   </table>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         ))
-//       )}
-//     </div>
-//   );
-// };
-
-// export default ViewMaterialDispatch;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Loader2, Package, FileText, X } from "lucide-react";
 
 const ViewMaterialDispatch = () => {
-  const [materialData, setMaterialData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [sites, setSites] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedSite, setSelectedSite] = useState("");
+  const [dispatchedMaterials, setDispatchedMaterials] = useState([]);
+  const [loading, setLoading] = useState({
+    projects: false,
+    sites: false,
+    materials: false,
+  });
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [commonDispatchDetails, setCommonDispatchDetails] = useState({
+    dc_no: "",
+    dispatch_date: "",
+    order_no: "",
+    vendor_code: ""
+  });
+
+  // Fetch projects
+  const fetchProjects = async () => {
+    try {
+      setLoading((prev) => ({ ...prev, projects: true }));
+      const response = await axios.get("http://localhost:5000/material/projects");
+      setProjects(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      setError("Failed to load projects. Please try again.");
+    } finally {
+      setLoading((prev) => ({ ...prev, projects: false }));
+    }
+  };
+
+  // Fetch sites based on selected project
+  const fetchSites = async (pd_id) => {
+    try {
+      setLoading((prev) => ({ ...prev, sites: true }));
+      const response = await axios.get(`http://localhost:5000/material/sites/${pd_id}`);
+      setSites(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching sites:", error);
+      setError("Failed to load sites. Please try again.");
+      setSites([]);
+    } finally {
+      setLoading((prev) => ({ ...prev, sites: false }));
+    }
+  };
+
+  // Fetch dispatched materials for selected project and site
+  const fetchDispatchedMaterials = async () => {
+    if (!selectedProject || !selectedSite) return;
+    try {
+      setLoading((prev) => ({ ...prev, materials: true }));
+      setError(null);
+      const response = await axios.get("http://localhost:5000/material/dispatch-details", {
+        params: { pd_id: selectedProject, site_id: selectedSite },
+      });
+      const materials = response.data.data || [];
+      setDispatchedMaterials(materials);
+      
+      // Set common dispatch details from the first record
+      if (materials.length > 0) {
+        setCommonDispatchDetails({
+          dc_no: materials[0].dc_no || "N/A",
+          dispatch_date: materials[0].dispatch_date 
+            ? new Date(materials[0].dispatch_date).toLocaleDateString("en-US", { dateStyle: "medium" })
+            : "N/A",
+          order_no: materials[0].order_no || "N/A",
+          vendor_code: materials[0].vendor_code || "N/A"
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching dispatched materials:", error);
+      setError(
+        error.response?.data?.message ||
+        error.response?.data?.sqlMessage ||
+        "Failed to load dispatched materials. Please try again."
+      );
+    } finally {
+      setLoading((prev) => ({ ...prev, materials: false }));
+    }
+  };
+
+  // Handle project selection
+  const handleProjectChange = async (e) => {
+    const pd_id = e.target.value;
+    setSelectedProject(pd_id);
+    setSelectedSite("");
+    setSites([]);
+    setDispatchedMaterials([]);
+    setCommonDispatchDetails({
+      dc_no: "",
+      dispatch_date: "",
+      order_no: "",
+      vendor_code: ""
+    });
+    setError(null);
+    if (pd_id) {
+      await fetchSites(pd_id);
+    }
+  };
+
+  // Handle site selection
+  const handleSiteChange = (e) => {
+    setSelectedSite(e.target.value);
+    setDispatchedMaterials([]);
+    setCommonDispatchDetails({
+      dc_no: "",
+      dispatch_date: "",
+      order_no: "",
+      vendor_code: ""
+    });
+    setError(null);
+  };
 
   useEffect(() => {
-    const fetchMaterialAssignments = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("http://localhost:5000/material/material-assignments");
-        setMaterialData(response.data.data || []);
-      } catch (error) {
-        console.error("Error fetching material assignments:", error);
-        setError("Failed to load material assignments. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMaterialAssignments();
+    fetchProjects();
   }, []);
 
-  // Group data by project_name and site_name
-  const groupedData = materialData.reduce((acc, item) => {
-    const projectKey = item.project_name;
-    const siteKey = item.site_name;
-
-    if (!acc[projectKey]) {
-      acc[projectKey] = {};
+  useEffect(() => {
+    if (selectedProject && selectedSite) {
+      fetchDispatchedMaterials();
     }
-    if (!acc[projectKey][siteKey]) {
-      acc[projectKey][siteKey] = { items: [], po_numbers: new Set() };
-    }
-    acc[projectKey][siteKey].items.push(item);
-    acc[projectKey][siteKey].po_numbers.add(item.po_number);
-    return acc;
-  }, {});
-
-  // Filter data based on search term
-  const filteredData = Object.keys(groupedData).reduce((acc, project) => {
-    const sites = groupedData[project];
-    const filteredSites = Object.keys(sites).reduce((siteAcc, site) => {
-      const filteredItems = sites[site].items.filter(
-        (item) =>
-          item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.dc_no.toString().includes(searchTerm) ||
-          item.assign_date.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      if (filteredItems.length > 0) {
-        siteAcc[site] = {
-          items: filteredItems,
-          po_numbers: sites[site].po_numbers,
-        };
-      }
-      return siteAcc;
-    }, {});
-    if (Object.keys(filteredSites).length > 0) {
-      acc[project] = filteredSites;
-    }
-    return acc;
-  }, {});
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-t-4 border-b-4 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 sm:p-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm sm:text-base animate-pulse">
-        {error}
-      </div>
-    );
-  }
+  }, [selectedProject, selectedSite]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Material Dispatch Details</h2>
-        <input
-          type="text"
-          placeholder="Search by item name, DC number"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="p-2 border border-gray-300 rounded-lg w-full max-w-xs sm:max-w-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-blue-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
+            <Package className="h-8 w-8 text-teal-600" aria-hidden="true" />
+            Dispatched Materials
+          </h2>
+          <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+            View details of materials dispatched to your project sites
+          </p>
+        </div>
 
-      {Object.keys(filteredData).length === 0 ? (
-        <div className="text-center text-gray-600">No material assignments found.</div>
-      ) : (
-        Object.keys(filteredData).map((project) => (
-          <div key={project} className="mb-8">
-            <h3 className="text-lg sm:text-xl font-semibold text-indigo-600 mb-4">{project}</h3>
-            {Object.keys(filteredData[project]).map((site) => (
-              <div key={site} className="mb-6">
-                <div className="flex items-center flex-wrap gap-2 mb-3">
-                  <h4 className="text-base sm:text-lg font-medium text-gray-700">{site}</h4>
-                  <span className="text-sm text-gray-500">
-                    PO Number: {Array.from(filteredData[project][site].po_numbers).join(", ")}
-                  </span>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-                    <thead>
-                      <tr className="bg-indigo-50 text-left text-xs sm:text-sm text-gray-700">
-                        <th className="p-3 sm:p-4 border-b">Assign Date</th>
-                        <th className="p-3 sm:p-4 border-b">DC Number</th>
-                        <th className="p-3 sm:p-4 border-b">Material Name</th>
-                        <th className="p-3 sm:p-4 border-b">UOM</th>
-                        <th className="p-3 sm:p-4 border-b">Quantity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData[project][site].items.map((item, index) => (
-                        <tr
-                          key={index}
-                          className="text-xs sm:text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="p-3 sm:p-4 border-b">
-                            {new Date(item.assign_date).toLocaleDateString()}
-                          </td>
-                          <td className="p-3 sm:p-4 border-b">{item.dc_no}</td>
-                          <td className="p-3 sm:p-4 border-b">{item.item_name}</td>
-                          <td className="p-3 sm:p-4 border-b">{item.uom}</td>
-                          <td className="p-3 sm:p-4 border-b">{item.qty}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
+        {/* Project and Site Selection */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-6 rounded-xl shadow-lg">
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">Select Project</label>
+            <select
+              value={selectedProject}
+              onChange={handleProjectChange}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm bg-white shadow-sm transition-all duration-200"
+              disabled={loading.projects}
+            >
+              <option value="">Select Project</option>
+              {projects.map((project) => (
+                <option key={project.pd_id} value={project.pd_id}>
+                  {project.project_name || "Unknown Project"}
+                </option>
+              ))}
+            </select>
+            {loading.projects && (
+              <Loader2 className="h-5 w-5 text-teal-500 animate-spin mt-2" />
+            )}
           </div>
-        ))
-      )}
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">Select Site</label>
+            <select
+              value={selectedSite}
+              onChange={handleSiteChange}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm bg-white shadow-sm transition-all duration-200 disabled:bg-gray-50"
+              disabled={!selectedProject || loading.sites}
+            >
+              <option value="">Select Site</option>
+              {sites.map((site) => (
+                <option key={site.site_id} value={site.site_id}>
+                  {`${site.site_name || "Unknown Site"} (PO: ${site.po_number || "N/A"})`}
+                </option>
+              ))}
+            </select>
+            {loading.sites && selectedProject && (
+              <Loader2 className="h-5 w-5 text-teal-500 animate-spin mt-2" />
+            )}
+          </div>
+        </div>
+
+        {/* Common Dispatch Details */}
+        {dispatchedMaterials.length > 0 && (
+          <div className="mb-6 bg-white p-6 rounded-xl shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dispatch Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-xs font-medium text-gray-600">DC No</p>
+                <p className="text-sm text-gray-900">{commonDispatchDetails.dc_no}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-600">Dispatch Date</p>
+                <p className="text-sm text-gray-900">{commonDispatchDetails.dispatch_date}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-600">Order No</p>
+                <p className="text-sm text-gray-900">{commonDispatchDetails.order_no}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-600">Vendor Code</p>
+                <p className="text-sm text-gray-900">{commonDispatchDetails.vendor_code}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg shadow-md flex items-center justify-between transition-all duration-300">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-red-500" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full"
+              aria-label="Close error message"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading.materials ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-12 w-12 text-teal-600 animate-spin" aria-hidden="true" />
+              <p className="text-gray-600 text-lg font-medium">Loading dispatched materials...</p>
+            </div>
+          </div>
+        ) : !selectedProject || !selectedSite ? (
+          <div className="text-center py-16 bg-white rounded-xl shadow-lg border border-gray-200">
+            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" aria-hidden="true" />
+            <p className="text-gray-600 text-lg font-medium">Please select a project and site.</p>
+          </div>
+        ) : dispatchedMaterials.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl shadow-lg border border-gray-200">
+            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" aria-hidden="true" />
+            <p className="text-gray-600 text-lg font-medium">No dispatched materials found for this project and site.</p>
+            <p className="text-gray-500 mt-2">Dispatch materials to this project and site to see them listed here.</p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider">
+                        #
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider">
+                        Material Name
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider">
+                        Quantity & UOM
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider">
+                        Dispatched Quantities
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider">
+                        Remarks
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {dispatchedMaterials.map((dispatch, index) => (
+                      <tr
+                        key={dispatch.id}
+                        className="hover:bg-teal-50 transition-colors duration-200"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {index + 1}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <p className="font-medium">
+                            {dispatch.item_name || "N/A"}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <p>
+                            {dispatch.dispatch_qty || dispatch.assigned_quantity || "0"} {dispatch.uom_name || ""}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <div className="space-y-1">
+                            {dispatch.comp_a_qty !== null && (
+                              <p className="text-sm">
+                                Component A: {dispatch.comp_a_qty}
+                              </p>
+                            )}
+                            {dispatch.comp_b_qty !== null && (
+                              <p className="text-sm">
+                                Component B: {dispatch.comp_b_qty}
+                              </p>
+                            )}
+                            {dispatch.comp_c_qty !== null && (
+                              <p className="text-sm">
+                                Component C: {dispatch.comp_c_qty}
+                              </p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <div className="space-y-1">
+                            {dispatch.comp_a_remarks && (
+                              <p className="text-sm">
+                                <span className="font-medium">A:</span> {dispatch.comp_a_remarks}
+                              </p>
+                            )}
+                            {dispatch.comp_b_remarks && (
+                              <p className="text-sm">
+                                <span className="font-medium">B:</span> {dispatch.comp_b_remarks}
+                              </p>
+                            )}
+                            {dispatch.comp_c_remarks && (
+                              <p className="text-sm">
+                                <span className="font-medium">C:</span> {dispatch.comp_c_remarks}
+                              </p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-6">
+              {dispatchedMaterials.map((dispatch, index) => (
+                <div
+                  key={dispatch.id}
+                  className="bg-white rounded-xl shadow-lg p-5 border border-gray-100"
+                >
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-900">#{index + 1}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Material Name</p>
+                      <p className="text-sm text-gray-600">
+                        {dispatch.item_name || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Quantity & UOM</p>
+                      <p className="text-sm text-gray-600">
+                        {dispatch.dispatch_qty || dispatch.assigned_quantity || "0"} {dispatch.uom_name || ""}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Dispatched Quantities</p>
+                      <div className="space-y-1">
+                        {dispatch.comp_a_qty !== null && (
+                          <p className="text-sm text-gray-600">
+                            Component A: {dispatch.comp_a_qty}
+                          </p>
+                        )}
+                        {dispatch.comp_b_qty !== null && (
+                          <p className="text-sm text-gray-600">
+                            Component B: {dispatch.comp_b_qty}
+                          </p>
+                        )}
+                        {dispatch.comp_c_qty !== null && (
+                          <p className="text-sm text-gray-600">
+                            Component C: {dispatch.comp_c_qty}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Remarks</p>
+                      <div className="space-y-1">
+                        {dispatch.comp_a_remarks && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">A:</span> {dispatch.comp_a_remarks}
+                          </p>
+                        )}
+                        {dispatch.comp_b_remarks && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">B:</span> {dispatch.comp_b_remarks}
+                          </p>
+                        )}
+                        {dispatch.comp_c_remarks && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">C:</span> {dispatch.comp_c_remarks}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

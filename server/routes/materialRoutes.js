@@ -22,10 +22,20 @@ router.post("/departments", materialController.addDepartment);
 router.post("/employment-types", materialController.addEmploymentType);
 router.post("/designations", materialController.addDesignation);
 router.get("/statuses", materialController.fetchStatuses);
-router.post("/assign-material", materialController.assignMaterial);
 router.get('/assigned-materials', materialController.getAssignedMaterials);
 
+router.post("/assign-material", materialController.assignMaterial);
 router.post("/add-dispatch", materialController.addMaterialDispatch);
 router.get("/assignments-with-dispatch", materialController.fetchMaterialAssignmentsWithDispatch);
+router.get("/dispatch-details", materialController.fetchMaterialDispatchDetails);
+
+router.get("/transport-types", materialController.getTransportTypes);
+router.get("/providers", materialController.getProviders);
+router.post("/add-provider", materialController.addProvider);
+router.post("/add-vehicle", materialController.addVehicle);
+router.post("/add-driver", materialController.addDriver);
+router.post("/add-transport", materialController.addTransport);
+router.get("/vehicles", materialController.getVehicles);
+router.get("/drivers", materialController.getDrivers);
 
 module.exports = router;
