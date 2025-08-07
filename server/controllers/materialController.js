@@ -794,85 +794,6 @@ exports.getAssignedMaterials = async (req, res) => {
 
 
 
-
-
-
-// exports.assignMaterial = async (req, res) => {
-//   try {
-//     const assignments = Array.isArray(req.body) ? req.body : [req.body];
-
-//     if (assignments.length === 0) {
-//       return res.status(400).json({
-//         status: 'error',
-//         message: 'At least one material assignment is required',
-//       });
-//     }
-
-//     // Validate each assignment
-//     const validationErrors = [];
-//     assignments.forEach((assignment, index) => {
-//       const { pd_id, site_id, item_id, uom_id, quantity } = assignment;
-
-//       if (!pd_id || typeof pd_id !== 'string' || pd_id.trim() === '') {
-//         validationErrors.push(`Assignment ${index + 1}: pd_id is required and must be a non-empty string`);
-//       }
-//       if (!site_id || typeof site_id !== 'string' || site_id.trim() === '') {
-//         validationErrors.push(`Assignment ${index + 1}: site_id is required and must be a non-empty string`);
-//       }
-//       if (!item_id || typeof item_id !== 'string' || item_id.trim() === '' || item_id === 'N/A') {
-//         validationErrors.push(`Assignment ${index + 1}: item_id is required and must be a valid material ID (not 'N/A')`);
-//       }
-//       if (!Number.isInteger(uom_id) || uom_id <= 0) {
-//         validationErrors.push(`Assignment ${index + 1}: uom_id is required and must be a positive integer`);
-//       }
-//       if (!Number.isInteger(quantity) || quantity <= 0) {
-//         validationErrors.push(`Assignment ${index + 1}: quantity is required and must be a positive integer`);
-//       }
-//     });
-
-//     if (validationErrors.length > 0) {
-//       return res.status(400).json({
-//         status: 'error',
-//         message: 'Validation errors',
-//         errors: validationErrors,
-//       });
-//     }
-
-//     const insertedIds = [];
-//     for (const { pd_id, site_id, item_id, uom_id, quantity } of assignments) {
-//       const [result] = await db.query(
-//         'INSERT INTO material_assign (pd_id, site_id, item_id, uom_id, quantity, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-//         [pd_id, site_id, item_id, uom_id, quantity]
-//       );
-//       insertedIds.push(result.insertId);
-//     }
-
-//     res.status(201).json({
-//       status: 'success',
-//       message: 'Materials assigned successfully',
-//       data: { insertedIds },
-//     });
-//   } catch (error) {
-//     console.error('Error in assignMaterial:', error);
-//     if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-//       return res.status(400).json({
-//         status: 'error',
-//         message: 'Invalid reference: pd_id, site_id, item_id, or uom_id does not exist in the database',
-//       });
-//     }
-//     res.status(500).json({
-//       status: 'error',
-//       message: 'Internal server error',
-//       error: error.message,
-//     });
-//   }
-// };
-
-
-
-
-
-
 exports.assignMaterial = async (req, res) => {
   try {
     const assignments = Array.isArray(req.body) ? req.body : [req.body];
@@ -946,8 +867,15 @@ exports.assignMaterial = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
+
 exports.addMaterialDispatch = async (req, res) => {
-  const connection = await db.getConnection(); // Use a transaction to ensure data consistency
+  const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
 
@@ -1041,21 +969,32 @@ exports.addMaterialDispatch = async (req, res) => {
     // Validate and insert transport details (if assignments exist)
     let transportInsertedIds = [];
     if (dispatchInsertedIds.length > 0 && transport) {
-      const { provider_id, destination, vehicle_id, driver_id, booking_expense, travel_expense } = transport;
+      let { transport_type_id, provider_id, vehicle_id, driver_id, destination, booking_expense, travel_expense, provider_address, provider_mobile, vehicle_model, vehicle_number, driver_mobile, driver_address } = transport;
 
       // Validate transport fields
       const transportValidationErrors = [];
-      if (!provider_id || isNaN(provider_id)) {
-        transportValidationErrors.push('Transport: provider_id is required and must be a number');
+      if (!transport_type_id || isNaN(transport_type_id)) {
+        transportValidationErrors.push('Transport: transport_type_id is required and must be a number');
+      } else {
+        const [typeExists] = await connection.query('SELECT id FROM transport_type WHERE id = ? AND id IN (1, 2)', [transport_type_id]);
+        if (!typeExists.length) {
+          transportValidationErrors.push('Transport: transport_type_id must be 1 (Own Vehicle) or 2 (Rental Vehicle)');
+        }
+      }
+      if (!provider_id || (typeof provider_id === 'string' && provider_id.trim() === '')) {
+        transportValidationErrors.push('Transport: provider_id is required and must be a non-empty string or number');
+      }
+      if (!vehicle_id || (typeof vehicle_id === 'string' && vehicle_id.trim() === '')) {
+        transportValidationErrors.push('Transport: vehicle_id is required and must be a non-empty string or number');
+      }
+      if (!driver_id || (typeof driver_id === 'string' && driver_id.trim() === '')) {
+        transportValidationErrors.push('Transport: driver_id is required and must be a non-empty string or number');
       }
       if (!destination || typeof destination !== 'string' || destination.trim() === '') {
         transportValidationErrors.push('Transport: destination is required and must be a non-empty string');
       }
-      if (!vehicle_id || isNaN(vehicle_id)) {
-        transportValidationErrors.push('Transport: vehicle_id is required and must be a number');
-      }
-      if (!driver_id || isNaN(driver_id)) {
-        transportValidationErrors.push('Transport: driver_id is required and must be a number');
+      if (transport_type_id === 2 && (booking_expense === null || isNaN(booking_expense) || booking_expense < 0)) {
+        transportValidationErrors.push('Transport: booking_expense is required for Rental Vehicle and must be a non-negative number');
       }
       if (booking_expense !== null && (isNaN(booking_expense) || booking_expense < 0)) {
         transportValidationErrors.push('Transport: booking_expense must be a non-negative number or null');
@@ -1073,32 +1012,73 @@ exports.addMaterialDispatch = async (req, res) => {
         });
       }
 
-      // Verify foreign keys exist
-      const [providerExists] = await connection.query('SELECT id FROM provider_master WHERE id = ?', [provider_id]);
-      if (!providerExists.length) {
-        await connection.rollback();
-        return res.status(400).json({
-          status: 'error',
-          message: 'Invalid provider_id: Provider does not exist',
-        });
+      // Handle provider_id
+      if (typeof provider_id === 'string') {
+        const [existingProvider] = await connection.query('SELECT id FROM provider_master WHERE provider_name = ?', [provider_id]);
+        if (existingProvider.length > 0) {
+          provider_id = existingProvider[0].id;
+        } else {
+          const [result] = await connection.query(
+            'INSERT INTO provider_master (provider_name, address, mobile, transport_type_id) VALUES (?, ?, ?, ?)',
+            [provider_id, provider_address || null, provider_mobile || null, transport_type_id]
+          );
+          provider_id = result.insertId;
+        }
+      } else {
+        const [providerExists] = await connection.query('SELECT id FROM provider_master WHERE id = ?', [provider_id]);
+        if (!providerExists.length) {
+          await connection.rollback();
+          return res.status(400).json({
+            status: 'error',
+            message: 'Invalid provider_id: Provider does not exist',
+          });
+        }
       }
 
-      const [vehicleExists] = await connection.query('SELECT id FROM vehicle_master WHERE id = ?', [vehicle_id]);
-      if (!vehicleExists.length) {
-        await connection.rollback();
-        return res.status(400).json({
-          status: 'error',
-          message: 'Invalid vehicle_id: Vehicle does not exist',
-        });
+      // Handle vehicle_id
+      if (typeof vehicle_id === 'string') {
+        const [existingVehicle] = await connection.query('SELECT id FROM vehicle_master WHERE vehicle_name = ? OR vehicle_number = ?', [vehicle_id, vehicle_id]);
+        if (existingVehicle.length > 0) {
+          vehicle_id = existingVehicle[0].id;
+        } else {
+          const [result] = await connection.query(
+            'INSERT INTO vehicle_master (vehicle_name, vehicle_model, vehicle_number) VALUES (?, ?, ?)',
+            [vehicle_id, vehicle_model || null, vehicle_number || vehicle_id]
+          );
+          vehicle_id = result.insertId;
+        }
+      } else {
+        const [vehicleExists] = await connection.query('SELECT id FROM vehicle_master WHERE id = ?', [vehicle_id]);
+        if (!vehicleExists.length) {
+          await connection.rollback();
+          return res.status(400).json({
+            status: 'error',
+            message: 'Invalid vehicle_id: Vehicle does not exist',
+          });
+        }
       }
 
-      const [driverExists] = await connection.query('SELECT id FROM driver_master WHERE id = ?', [driver_id]);
-      if (!driverExists.length) {
-        await connection.rollback();
-        return res.status(400).json({
-          status: 'error',
-          message: 'Invalid driver_id: Driver does not exist',
-        });
+      // Handle driver_id
+      if (typeof driver_id === 'string') {
+        const [existingDriver] = await connection.query('SELECT id FROM driver_master WHERE driver_name = ?', [driver_id]);
+        if (existingDriver.length > 0) {
+          driver_id = existingDriver[0].id;
+        } else {
+          const [result] = await connection.query(
+            'INSERT INTO driver_master (driver_name, driver_mobile, driver_address) VALUES (?, ?, ?)',
+            [driver_id, driver_mobile || null, driver_address || null]
+          );
+          driver_id = result.insertId;
+        }
+      } else {
+        const [driverExists] = await connection.query('SELECT id FROM driver_master WHERE id = ?', [driver_id]);
+        if (!driverExists.length) {
+          await connection.rollback();
+          return res.status(400).json({
+            status: 'error',
+            message: 'Invalid driver_id: Driver does not exist',
+          });
+        }
       }
 
       // Insert transport details for each dispatch
@@ -1139,6 +1119,10 @@ exports.addMaterialDispatch = async (req, res) => {
     connection.release();
   }
 };
+
+
+
+
 
 exports.fetchMaterialAssignmentsWithDispatch = async (req, res) => {
   try {
@@ -1198,6 +1182,7 @@ exports.fetchMaterialAssignmentsWithDispatch = async (req, res) => {
     });
   }
 };
+
 
 exports.fetchMaterialDispatchDetails = async (req, res) => {
   try {
@@ -1276,16 +1261,20 @@ exports.getTransportTypes = async function(req, res) {
 exports.getProviders = async function(req, res) {
   const { transport_type_id } = req.query;
   try {
-    const [rows] = await db.query(
-      "SELECT id, provider_name FROM provider_master WHERE transport_type_id = ?",
-      [transport_type_id]
-    );
+    let query = "SELECT id, provider_name FROM provider_master";
+    const queryParams = [];
+    if (transport_type_id && !isNaN(transport_type_id)) {
+      query += " WHERE transport_type_id = ?";
+      queryParams.push(transport_type_id);
+    }
+    const [rows] = await db.query(query, queryParams);
     res.status(200).json({ status: "success", message: "Providers fetched successfully", data: rows });
   } catch (error) {
     console.error("Error fetching providers:", error);
     res.status(500).json({ status: "error", message: "Failed to fetch providers", error: error.message });
   }
 };
+
 
 exports.addProvider = async function(req, res) {
   const { provider_name, address, mobile, transport_type_id } = req.body;

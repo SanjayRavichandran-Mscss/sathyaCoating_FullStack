@@ -25,6 +25,9 @@ router.get("/statuses", materialController.fetchStatuses);
 router.get('/assigned-materials', materialController.getAssignedMaterials);
 
 router.post("/assign-material", materialController.assignMaterial);
+
+
+
 router.post("/add-dispatch", materialController.addMaterialDispatch);
 router.get("/assignments-with-dispatch", materialController.fetchMaterialAssignmentsWithDispatch);
 router.get("/dispatch-details", materialController.fetchMaterialDispatchDetails);
