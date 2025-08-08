@@ -1184,71 +1184,6 @@ exports.fetchMaterialAssignmentsWithDispatch = async (req, res) => {
 };
 
 
-// exports.fetchMaterialDispatchDetails = async (req, res) => {
-//   try {
-//     const { pd_id, site_id } = req.query;
-//     let query = `
-//       SELECT 
-//         md.id,
-//         md.material_assign_id,
-//         md.dc_no,
-//         md.dispatch_date,
-//         md.order_no,
-//         md.vendor_code,
-//         md.comp_a_qty,
-//         md.comp_b_qty,
-//         md.comp_c_qty,
-//         md.comp_a_remarks,
-//         md.comp_b_remarks,
-//         md.comp_c_remarks,
-//         md.created_at,
-//         ma.quantity AS assigned_quantity,
-//         ma.comp_ratio_a,
-//         ma.comp_ratio_b,
-//         ma.comp_ratio_c,
-//         pd.project_name,
-//         sd.site_name,
-//         sd.po_number,
-//         mm.item_name,
-//         um.uom_name
-//       FROM material_dispatch md
-//       JOIN material_assign ma ON md.material_assign_id = ma.id
-//       JOIN project_details pd ON ma.pd_id = pd.pd_id
-//       JOIN site_details sd ON ma.site_id = sd.site_id
-//       JOIN material_master mm ON ma.item_id = mm.item_id
-//       JOIN uom_master um ON ma.uom_id = um.uom_id
-//     `;
-//     const queryParams = [];
-
-//     if (pd_id && site_id) {
-//       query += ' WHERE ma.pd_id = ? AND ma.site_id = ?';
-//       queryParams.push(pd_id, site_id);
-//     } else {
-//       return res.status(400).json({
-//         status: 'error',
-//         message: 'Both pd_id and site_id are required',
-//       });
-//     }
-
-//     const [rows] = await db.query(query, queryParams);
-
-//     res.status(200).json({
-//       status: 'success',
-//       message: 'Material dispatch details fetched successfully',
-//       data: rows,
-//     });
-//   } catch (error) {
-//     console.error('Fetch dispatch details error:', error);
-//     res.status(500).json({
-//       status: 'error',
-//       message: 'Internal server error',
-//       error: error.message,
-//       sqlMessage: error.sqlMessage || 'No SQL message available',
-//     });
-//   }
-// };
-
-
 
 exports.fetchMaterialDispatchDetails = async (req, res) => {
   try {
@@ -1279,14 +1214,30 @@ exports.fetchMaterialDispatchDetails = async (req, res) => {
         um.uom_name,
         JSON_OBJECT(
           'id', tm.id,
-          'provider_id', tm.provider_id,
           'destination', tm.destination,
-          'vehicle_id', tm.vehicle_id,
-          'driver_id', tm.driver_id,
           'booking_expense', tm.booking_expense,
           'travel_expense', tm.travel_expense,
           'dispatch_id', tm.dispatch_id,
-          'created_at', tm.created_at
+          'created_at', tm.created_at,
+          'vehicle', JSON_OBJECT(
+            'id', vm.id,
+            'vehicle_name', vm.vehicle_name,
+            'vehicle_model', vm.vehicle_model,
+            'vehicle_number', vm.vehicle_number
+          ),
+          'driver', JSON_OBJECT(
+            'id', dm.id,
+            'driver_name', dm.driver_name,
+            'driver_mobile', dm.driver_mobile,
+            'driver_address', dm.driver_address
+          ),
+          'provider', JSON_OBJECT(
+            'id', pm.id,
+            'provider_name', pm.provider_name,
+            'address', pm.address,
+            'mobile', pm.mobile,
+            'transport_type_id', pm.transport_type_id
+          )
         ) AS transport_details
       FROM material_dispatch md
       JOIN material_assign ma ON md.material_assign_id = ma.id
@@ -1295,6 +1246,9 @@ exports.fetchMaterialDispatchDetails = async (req, res) => {
       JOIN material_master mm ON ma.item_id = mm.item_id
       JOIN uom_master um ON ma.uom_id = um.uom_id
       LEFT JOIN transport_master tm ON md.id = tm.dispatch_id
+      LEFT JOIN vehicle_master vm ON tm.vehicle_id = vm.id
+      LEFT JOIN driver_master dm ON tm.driver_id = dm.id
+      LEFT JOIN provider_master pm ON tm.provider_id = pm.id
     `;
     const queryParams = [];
 
@@ -1325,6 +1279,7 @@ exports.fetchMaterialDispatchDetails = async (req, res) => {
     });
   }
 };
+
 
 exports.getTransportTypes = async function(req, res) {
   try {
@@ -1412,7 +1367,7 @@ exports.addTransport = async function(req, res) {
       return res.status(400).json({ status: "error", message: "Dispatch ID, provider ID, destination, vehicle ID, driver ID, and travel expense are required" });
     }
     const [result] = await db.query(
-      "INSERT INTO transport_master (dispatch_id, provider_id, destination, vehicle_id, driver_id, booking_expense, travel_expense, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+      "INSERT INTO transport_master (dispatch_id, provider_id, destination, id,id, booking_expense, travel_expense, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
       [dispatch_id, provider_id, destination, vehicle_id, driver_id, booking_expense || null, travel_expense]
     );
     res.status(201).json({ status: "success", message: "Transport added successfully", data: { id: result.insertId } });
